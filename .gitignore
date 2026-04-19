@@ -1,0 +1,39 @@
+# Credentials & Secrets
+credentials.json
+config/credentials.json
+config/token.json
+token.json
+
+# Individual Reports (contains personal data)
+output/reports/bireysel/
+
+# Generated Outputs (reproducible via code)
+output/reports/genel_ozet_raporu.pdf
+output/reports/charts/
+output/dashboard/dashboard.html
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+venv/
+.venv/
+env/
+.env
+
+# macOS
+.DS_Store
+._*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*~
+
+# Misc
+*.log
+.ipynb_checkpoints/
