@@ -1,17 +1,21 @@
 # PHQ-9 Depression Analysis System
+19 April 2026 - Sunday
+
 
 A comprehensive depression screening and analysis system built with Python. Collects responses via Google Forms using an extended 15-question PHQ-9 scale, performs clinical scoring, runs machine learning models, conducts statistical analysis, and generates automated reports with interactive dashboards.
 
-<!-- Add your screenshots/images here -->
-<!-- ![Dashboard](assets/dashboard-screenshot.png) -->
+![Stats Screenshot](img/stats.png)
 
 ## Features
 
 - **Google Forms Integration** — Automatically creates and distributes the PHQ-9 questionnaire, fetches responses via API
-- **Clinical PHQ-9 Scoring** — Total score calculation, severity classification (Minimal to Severe), depression percentage, and critical question monitoring (self-harm ideation)
+- **Clinical PHQ-9 Scoring** — Total score calculation, severity classification, depression percentage, and critical question monitoring (self-harm ideation)
 - **Machine Learning Models** — 6 algorithms (K-Means, Random Forest, Logistic Regression, SVM, Decision Tree, Naive Bayes) with ensemble prediction combining 60% clinical + 40% ML weight
 - **Statistical Analysis** — Descriptive statistics, 95% confidence intervals, normality testing (Shapiro-Wilk), Pearson & Spearman correlation, gender-based comparison (t-test / Mann-Whitney U)
 - **Automated Reporting** — Interactive HTML dashboard with Plotly, general summary PDF, individual participant PDF reports, and static chart generation
+
+![Scores Screenshot](img/s1.png)
+![Scores Screenshot](img/s2.png)
 
 ## Project Structure
 
@@ -36,10 +40,11 @@ depression_analysis_project/
 │   │   └── visualizations.py   # Plotly & Matplotlib charts
 │   └── utils/
 │       └── helpers.py
-├── templates/
-│   └── dashboard_template.html # Jinja2 dashboard template
 └── output/                     # Generated reports & charts
 ```
+
+![Skor Screenshot](img/skor.png)
+![Radar Screenshot](img/radar.png)
 
 ## Installation
 
@@ -48,19 +53,6 @@ git clone https://github.com/GorkemParadise/depression-phq9-analysis-.git
 cd depression-phq9-analysis-
 pip install -r requirements.txt
 ```
-
-### Google API Setup
-
-To use Google Forms integration, you need to set up OAuth 2.0 credentials:
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project and enable **Google Forms API**, **Google Sheets API**, and **Google Drive API**
-3. Create OAuth 2.0 credentials and download `credentials.json`
-4. Place `credentials.json` in the `config/` directory
-
-See `GOOGLE_API_SETUP.md` for detailed instructions.
-
-## Usage
 
 ### 1. Run Demo (no Google API required)
 
@@ -129,13 +121,6 @@ Cross-validation is performed with stratified 5-fold splits. The system is optim
 | Individual Reports | PDF | Per-participant score breakdown, ML predictions, risk assessment |
 | Static Charts | PNG | Correlation heatmap, severity pie, model comparison, and more |
 
-## Tech Stack
-
-- **Data & ML:** pandas, NumPy, scikit-learn, SciPy
-- **Visualization:** Plotly, Matplotlib, Seaborn
-- **Reporting:** fpdf2 (PDF), Jinja2 (HTML templates)
-- **API:** google-api-python-client, google-auth-oauthlib
-- **Python 3.10+**
 
 ## License
 

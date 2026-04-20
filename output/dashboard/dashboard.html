@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PHQ-9 Depresyon Analiz Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        :root {
+            --bg-dark: #1a1a2e;
+            --bg-card: #16213e;
+            --bg-card2: #0f3460;
+            --text-primary: #e8e8e8;
+            --text-secondary: #a8a8b8;
+            --accent: #3498db;
+            --accent2: #e74c3c;
+            --severity-minimal: #2ecc71;
+            --severity-hafif: #f39c12;
+            --severity-orta: #e67e22;
+            --severity-orta-siddetli: #e74c3c;
+            --severity-siddetli: #c0392b;
+        }
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background-color: var(--bg-card) !important;
+            border-bottom: 2px solid var(--accent);
+        }
+        .summary-card {
+            background: linear-gradient(135deg, var(--bg-card), var(--bg-card2));
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(52, 152, 219, 0.2);
+            transition: transform 0.2s;
+        }
+        .summary-card:hover {
+            transform: translateY(-3px);
+        }
+        .summary-card .value {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: var(--accent);
+        }
+        .summary-card .label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+        .chart-container {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(52, 152, 219, 0.15);
+        }
+        .section-title {
+            color: var(--accent);
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 8px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        .table-dark-custom {
+            background: var(--bg-card);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .table-dark-custom th {
+            background: var(--bg-card2);
+            color: var(--accent);
+            border-color: rgba(52, 152, 219, 0.2);
+        }
+        .table-dark-custom td {
+            color: var(--text-primary);
+            border-color: rgba(52, 152, 219, 0.1);
+        }
+        .severity-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: white;
+        }
+        .severity-Minimal { background: var(--severity-minimal); }
+        .severity-Hafif { background: var(--severity-hafif); }
+        .severity-Orta { background: var(--severity-orta); }
+        .severity-Orta-Siddetli { background: var(--severity-orta-siddetli); }
+        .severity-Siddetli { background: var(--severity-siddetli); }
+        .warning-box {
+            background: rgba(231, 76, 60, 0.15);
+            border: 1px solid var(--accent2);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .warning-box .icon { font-size: 1.3rem; }
+        .filter-input {
+            background: var(--bg-card2);
+            border: 1px solid rgba(52, 152, 219, 0.3);
+            color: var(--text-primary);
+            border-radius: 8px;
+            padding: 8px 12px;
+        }
+        .filter-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+            color: var(--text-primary);
+            background: var(--bg-card2);
+        }
+        .stat-highlight {
+            background: var(--bg-card2);
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+        }
+        footer {
+            background: var(--bg-card);
+            border-top: 1px solid rgba(52, 152, 219, 0.2);
+            padding: 20px 0;
+            margin-top: 40px;
+        }
+        .plotly-chart { width: 100%; }
+        @media (max-width: 768px) {
+            .summary-card .value { font-size: 1.6rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark mb-4">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">PHQ-9 Depresyon Analiz Dashboard</span>
+            <span class="navbar-text text-secondary">2026-04-19 11:37</span>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4">
+
+        <!-- Ozet Kartlari -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="summary-card">
+                    <div class="value">70</div>
+                    <div class="label">Toplam Katilimci</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="summary-card">
+                    <div class="value">12.57</div>
+                    <div class="label">Ortalama Skor</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="summary-card">
+                    <div class="value">27.9%</div>
+                    <div class="label">Ort. Depresyon Orani</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="summary-card">
+                    <div class="value" style="color: var(--accent2)">
+                        11
+                    </div>
+                    <div class="label">Kritik Uyari (S9)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kritik Uyarilar -->
+        
+        <div class="row mb-4">
+            <div class="col-12">
+                <h4 class="section-title">Kritik Uyarilar - Soru 9 (Intihar Dusuncesi)</h4>
+                
+                <div class="warning-box">
+                    <span class="icon">&#9888;</span>
+                    <strong>Feyza </strong> - Skor: /3 (Yuksek)
+                    <br><small class="text-secondary">Profesyonel degerlendirme onerilir.</small>
+                </div>
+                
+                <div class="warning-box">
+                    <span class="icon">&#9888;</span>
+                    <strong>Narmin </strong> - Skor: /3 (Orta)
+                    <br><small class="text-secondary">Profesyonel degerlendirme onerilir.</small>
+                </div>
+                
+                <div class="warning-box">
+                    <span class="icon">&#9888;</span>
+                    <strong>Data61</strong> - Skor: /3 (Dusuk)
+                    <br><small class="text-secondary">Profesyonel degerlendirme onerilir.</small>
+                </div>
+                
+                <div class="warning-box">
+                    <span class="icon">&#9888;</span>
+                    <strong>Yaztugcee</strong> - Skor: /3 (Orta)
+                    <br><small class="text-secondary">Profesyonel degerlendirme onerilir.</small>
+                </div>
+                
+                <div class="warning-box">
+                    <span class="icon">&#9888;</span>
+                    <strong>kkoc</strong> - Skor: /3 (Dusuk)
+                    <br><small class="text-secondary">Profesyonel degerlendirme onerilir.</small>
+                </div>
+                
+                <div class="warning-box">
+                    <span class="icon">&#9888;</span>
+                    <strong>Mihri</strong> - Skor: /3 (Yuksek)
+                    <br><small class="text-secondary">Profesyonel degerlendirme onerilir.</small>
+                </div>
+                
+                <div class="warning-box">
+                    <span class="icon">&#9888;</span>
+                    <strong>Tamara</strong> - Skor: /3 (Dusuk)
+                    <br><small class="text-secondary">Profesyonel degerlendirme onerilir.</small>
+                </div>
+                
+                <div class="warning-box">
+                    <span class="icon">&#9888;</span>
+                    <strong>A</strong> - Skor: /3 (Dusuk)
+                    <br><small class="text-secondary">Profesyonel degerlendirme onerilir.</small>
+                </div>
+                
+                <div class="warning-box">
+                    <span class="icon">&#9888;</span>
+                    <strong>Dr. Minik</strong> - Skor: /3 (Dusuk)
+                    <br><small class="text-secondary">Profesyonel degerlendirme onerilir.</small>
+                </div>
+                
+                <div class="warning-box">
+                    <span class="icon">&#9888;</span>
+                    <strong>M</strong> - Skor: /3 (Dusuk)
+                    <br><small class="text-secondary">Profesyonel degerlendirme onerilir.</small>
+                </div>
+                
+                <div class="warning-box">
+                    <span class="icon">&#9888;</span>
+                    <strong>Anonim22</strong> - Skor: /3 (Dusuk)
+                    <br><small class="text-secondary">Profesyonel degerlendirme onerilir.</small>
+                </div>
+                
+            </div>
+        </div>
+        
+
+        <!-- Grafikler - 1. Satir -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <div id="chart-severity-pie" class="plotly-chart"></div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <div id="chart-radar" class="plotly-chart"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grafikler - 2. Satir -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <div id="chart-age-scatter" class="plotly-chart"></div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <div id="chart-gender-box" class="plotly-chart"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grafikler - 3. Satir -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <div id="chart-cluster" class="plotly-chart"></div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <div id="chart-feature-importance" class="plotly-chart"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grafikler - 4. Satir -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <div id="chart-model-comparison" class="plotly-chart"></div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <div id="chart-heatmap" class="plotly-chart"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Zaman Serisi -->
+        
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="chart-container">
+                    <div id="chart-timeline" class="plotly-chart"></div>
+                </div>
+            </div>
+        </div>
+        
+
+        <!-- Skor Bar Chart -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="chart-container">
+                    <div id="chart-participant-bar" class="plotly-chart"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Istatistiksel Ozet -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h4 class="section-title">Tanimlayici Istatistikler</h4>
+                <div class="stat-highlight">
+                    <strong>Ortalama:</strong> 12.57 |
+                    <strong>Medyan:</strong> 12.0 |
+                    <strong>Std:</strong> 8.48
+                </div>
+                <div class="stat-highlight">
+                    <strong>Min:</strong> 0 |
+                    <strong>Max:</strong> 39 |
+                    <strong>IQR:</strong> 10.75
+                </div>
+                <div class="stat-highlight">
+                    <strong>%95 GA:</strong> [10.55, 14.59]
+                </div>
+                <div class="stat-highlight">
+                    <strong>Normallik:</strong> Normal dagilim varsayimi REDDEDILDI (p <= 0.05)
+                    (p=0.0004)
+                </div>
+            </div>
+            <div class="col-md-6">
+                <h4 class="section-title">ML Model Sonuclari</h4>
+                <div class="stat-highlight">
+                    <strong>En Iyi Model:</strong> Logistic Regression
+                    (CV: 0.9281)
+                </div>
+                
+                <div class="stat-highlight">
+                    <strong>Random Forest:</strong>
+                    Acc=0.6667 | CV=0.7429&plusmn;0.0969
+                </div>
+                
+                <div class="stat-highlight">
+                    <strong>Logistic Regression:</strong>
+                    Acc=0.8095 | CV=0.9281&plusmn;0.0755
+                </div>
+                
+                <div class="stat-highlight">
+                    <strong>SVM:</strong>
+                    Acc=0.7143 | CV=0.7571&plusmn;0.0857
+                </div>
+                
+                <div class="stat-highlight">
+                    <strong>Decision Tree:</strong>
+                    Acc=0.619 | CV=0.5429&plusmn;0.035
+                </div>
+                
+                <div class="stat-highlight">
+                    <strong>Gaussian NB:</strong>
+                    Acc=0.619 | CV=0.6714&plusmn;0.0857
+                </div>
+                
+            </div>
+        </div>
+
+        <!-- Katilimci Tablosu -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h4 class="section-title">Katilimci Detaylari</h4>
+                <div class="mb-3">
+                    <input type="text" class="form-control filter-input" id="tableFilter"
+                           placeholder="Katilimci ara (ID, cinsiyet, siddet)..."
+                           oninput="filterTable()">
+                </div>
+                <div class="table-responsive table-dark-custom">
+                    <table class="table table-dark table-hover mb-0" id="participantTable">
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable(0)">ID</th>
+                                <th onclick="sortTable(1)">Yas</th>
+                                <th onclick="sortTable(2)">Cinsiyet</th>
+                                <th onclick="sortTable(3)">Toplam Skor</th>
+                                <th onclick="sortTable(4)">Siddet</th>
+                                <th onclick="sortTable(5)">Depresyon %</th>
+                                <th onclick="sortTable(6)">Ensemble %</th>
+                                <th>Soru Skorlari</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                            <tr>
+                                <td>ms</td>
+                                <td>18-24</td>
+                                <td>Erkek</td>
+                                <td>9</td>
+                                <td><span class="severity-badge severity-Hafif">Hafif</span></td>
+                                <td>20.0%</td>
+                                <td>12.8%</td>
+                                <td class="small">1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 1 | 0 | 0 | 1 | 0 | 0</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Emre Budulğan </td>
+                                <td>18-24</td>
+                                <td>Erkek</td>
+                                <td>28</td>
+                                <td><span class="severity-badge severity-Orta-Siddetli">Orta-Siddetli</span></td>
+                                <td>62.2%</td>
+                                <td>77.3%</td>
+                                <td class="small">2 | 2 | 1 | 2 | 1 | 3 | 3 | 0 | 3 | 3 | 1 | 2 | 3 | 0 | 2</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Sema </td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>5</td>
+                                <td><span class="severity-badge severity-Minimal">Minimal</span></td>
+                                <td>11.1%</td>
+                                <td>6.7%</td>
+                                <td class="small">0 | 1 | 0 | 0 | 0 | 1 | 1 | 0 | 0 | 1 | 1 | 0 | 0 | 0 | 0</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Cem</td>
+                                <td>18-24</td>
+                                <td>Erkek</td>
+                                <td>0</td>
+                                <td><span class="severity-badge severity-Minimal">Minimal</span></td>
+                                <td>0.0%</td>
+                                <td>0.0%</td>
+                                <td class="small">0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Nberar</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>20</td>
+                                <td><span class="severity-badge severity-Orta">Orta</span></td>
+                                <td>44.4%</td>
+                                <td>66.2%</td>
+                                <td class="small">1 | 1 | 0 | 2 | 3 | 1 | 2 | 0 | 1 | 2 | 1 | 3 | 2 | 0 | 1</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>yaren kömürcü </td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>17</td>
+                                <td><span class="severity-badge severity-Orta">Orta</span></td>
+                                <td>37.8%</td>
+                                <td>56.7%</td>
+                                <td class="small">1 | 0 | 2 | 3 | 1 | 1 | 3 | 0 | 0 | 3 | 1 | 1 | 0 | 0 | 1</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Feyza </td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>22</td>
+                                <td><span class="severity-badge severity-Orta">Orta</span></td>
+                                <td>48.9%</td>
+                                <td>68.4%</td>
+                                <td class="small">1 | 1 | 3 | 2 | 3 | 2 | 2 | 0 | 0 | 1 | 1 | 1 | 1 | 3 | 1</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Narmin </td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>26</td>
+                                <td><span class="severity-badge severity-Orta-Siddetli">Orta-Siddetli</span></td>
+                                <td>57.8%</td>
+                                <td>74.6%</td>
+                                <td class="small">0 | 1 | 3 | 3 | 3 | 2 | 3 | 0 | 0 | 1 | 2 | 2 | 1 | 2 | 3</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Es</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>0</td>
+                                <td><span class="severity-badge severity-Minimal">Minimal</span></td>
+                                <td>0.0%</td>
+                                <td>0.0%</td>
+                                <td class="small">0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Data61</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>18</td>
+                                <td><span class="severity-badge severity-Orta">Orta</span></td>
+                                <td>40.0%</td>
+                                <td>58.5%</td>
+                                <td class="small">2 | 2 | 0 | 1 | 0 | 1 | 0 | 0 | 3 | 2 | 2 | 0 | 1 | 1 | 3</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Havvadudu</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>13</td>
+                                <td><span class="severity-badge severity-Hafif">Hafif</span></td>
+                                <td>28.9%</td>
+                                <td>20.3%</td>
+                                <td class="small">1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 0 | 3</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Ali</td>
+                                <td>65+</td>
+                                <td>Erkek</td>
+                                <td>4</td>
+                                <td><span class="severity-badge severity-Minimal">Minimal</span></td>
+                                <td>8.9%</td>
+                                <td>5.4%</td>
+                                <td class="small">1 | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 1 | 0 | 0</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Yaztugcee</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>38</td>
+                                <td><span class="severity-badge severity-Siddetli">Siddetli</span></td>
+                                <td>84.4%</td>
+                                <td>90.6%</td>
+                                <td class="small">3 | 3 | 3 | 3 | 3 | 3 | 3 | 0 | 1 | 3 | 3 | 3 | 3 | 2 | 2</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>kkoc</td>
+                                <td>25-34</td>
+                                <td>Kadin</td>
+                                <td>14</td>
+                                <td><span class="severity-badge severity-Hafif">Hafif</span></td>
+                                <td>31.1%</td>
+                                <td>22.0%</td>
+                                <td class="small">1 | 1 | 1 | 1 | 1 | 0 | 2 | 0 | 2 | 0 | 1 | 1 | 0 | 1 | 2</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Anonim</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>20</td>
+                                <td><span class="severity-badge severity-Orta">Orta</span></td>
+                                <td>44.4%</td>
+                                <td>62.8%</td>
+                                <td class="small">3 | 2 | 1 | 1 | 1 | 1 | 3 | 0 | 1 | 2 | 1 | 1 | 2 | 0 | 1</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Batuhan Sarı</td>
+                                <td>18-24</td>
+                                <td>Erkek</td>
+                                <td>18</td>
+                                <td><span class="severity-badge severity-Orta">Orta</span></td>
+                                <td>40.0%</td>
+                                <td>59.1%</td>
+                                <td class="small">1 | 1 | 2 | 1 | 2 | 1 | 2 | 0 | 1 | 2 | 2 | 1 | 1 | 0 | 1</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Ses</td>
+                                <td>18-24</td>
+                                <td>Erkek</td>
+                                <td>10</td>
+                                <td><span class="severity-badge severity-Hafif">Hafif</span></td>
+                                <td>22.2%</td>
+                                <td>13.6%</td>
+                                <td class="small">1 | 1 | 0 | 1 | 0 | 1 | 2 | 0 | 2 | 0 | 0 | 1 | 0 | 0 | 1</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Erdem Akçay</td>
+                                <td>18-24</td>
+                                <td>Erkek</td>
+                                <td>6</td>
+                                <td><span class="severity-badge severity-Minimal">Minimal</span></td>
+                                <td>13.3%</td>
+                                <td>8.1%</td>
+                                <td class="small">0 | 0 | 1 | 1 | 2 | 0 | 1 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>b2</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>4</td>
+                                <td><span class="severity-badge severity-Minimal">Minimal</span></td>
+                                <td>8.9%</td>
+                                <td>5.4%</td>
+                                <td class="small">0 | 1 | 1 | 0 | 0 | 0 | 1 | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Medivra </td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>8</td>
+                                <td><span class="severity-badge severity-Hafif">Hafif</span></td>
+                                <td>17.8%</td>
+                                <td>11.1%</td>
+                                <td class="small">1 | 0 | 0 | 0 | 1 | 1 | 1 | 0 | 0 | 1 | 1 | 1 | 0 | 0 | 1</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Mihri</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>39</td>
+                                <td><span class="severity-badge severity-Siddetli">Siddetli</span></td>
+                                <td>86.7%</td>
+                                <td>92.0%</td>
+                                <td class="small">3 | 3 | 3 | 3 | 3 | 3 | 3 | 0 | 2 | 1 | 3 | 3 | 3 | 3 | 3</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Sude</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>5</td>
+                                <td><span class="severity-badge severity-Minimal">Minimal</span></td>
+                                <td>11.1%</td>
+                                <td>6.8%</td>
+                                <td class="small">0 | 0 | 0 | 1 | 0 | 1 | 1 | 0 | 0 | 1 | 1 | 0 | 0 | 0 | 0</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Ayşenur Aydemir</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>14</td>
+                                <td><span class="severity-badge severity-Hafif">Hafif</span></td>
+                                <td>31.1%</td>
+                                <td>29.1%</td>
+                                <td class="small">1 | 2 | 1 | 1 | 0 | 2 | 1 | 0 | 0 | 1 | 2 | 0 | 1 | 0 | 2</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Dilruba</td>
+                                <td>25-34</td>
+                                <td>Kadin</td>
+                                <td>12</td>
+                                <td><span class="severity-badge severity-Hafif">Hafif</span></td>
+                                <td>26.7%</td>
+                                <td>19.2%</td>
+                                <td class="small">1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 1 | 1 | 1 | 1 | 0 | 0 | 1</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Esma</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>7</td>
+                                <td><span class="severity-badge severity-Minimal">Minimal</span></td>
+                                <td>15.6%</td>
+                                <td>9.6%</td>
+                                <td class="small">1 | 0 | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 1 | 1 | 1 | 0 | 0 | 1</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>gozde</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>30</td>
+                                <td><span class="severity-badge severity-Orta-Siddetli">Orta-Siddetli</span></td>
+                                <td>66.7%</td>
+                                <td>80.0%</td>
+                                <td class="small">3 | 3 | 1 | 3 | 2 | 3 | 2 | 0 | 1 | 3 | 3 | 1 | 2 | 0 | 3</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>brookline</td>
+                                <td>25-34</td>
+                                <td>Kadin</td>
+                                <td>16</td>
+                                <td><span class="severity-badge severity-Orta">Orta</span></td>
+                                <td>35.6%</td>
+                                <td>33.8%</td>
+                                <td class="small">2 | 1 | 1 | 1 | 2 | 1 | 3 | 0 | 1 | 1 | 1 | 1 | 0 | 0 | 1</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Mimar Sinan </td>
+                                <td>25-34</td>
+                                <td>Erkek</td>
+                                <td>5</td>
+                                <td><span class="severity-badge severity-Minimal">Minimal</span></td>
+                                <td>11.1%</td>
+                                <td>6.7%</td>
+                                <td class="small">1 | 1 | 0 | 1 | 0 | 0 | 1 | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Ases</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>2</td>
+                                <td><span class="severity-badge severity-Minimal">Minimal</span></td>
+                                <td>4.4%</td>
+                                <td>2.7%</td>
+                                <td class="small">0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>zeynep tosun</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>14</td>
+                                <td><span class="severity-badge severity-Hafif">Hafif</span></td>
+                                <td>31.1%</td>
+                                <td>24.6%</td>
+                                <td class="small">2 | 1 | 1 | 1 | 2 | 1 | 2 | 0 | 0 | 0 | 1 | 1 | 1 | 0 | 1</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Tamara</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>15</td>
+                                <td><span class="severity-badge severity-Hafif">Hafif</span></td>
+                                <td>33.3%</td>
+                                <td>46.7%</td>
+                                <td class="small">1 | 1 | 1 | 3 | 1 | 1 | 1 | 0 | 0 | 1 | 1 | 1 | 1 | 1 | 1</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>beat</td>
+                                <td>18-24</td>
+                                <td>Erkek</td>
+                                <td>7</td>
+                                <td><span class="severity-badge severity-Minimal">Minimal</span></td>
+                                <td>15.6%</td>
+                                <td>9.5%</td>
+                                <td class="small">1 | 1 | 0 | 0 | 1 | 1 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 2</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Pembe panter</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>12</td>
+                                <td><span class="severity-badge severity-Hafif">Hafif</span></td>
+                                <td>26.7%</td>
+                                <td>19.5%</td>
+                                <td class="small">1 | 2 | 1 | 1 | 0 | 1 | 1 | 0 | 0 | 1 | 0 | 1 | 2 | 0 | 1</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Süm</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>18</td>
+                                <td><span class="severity-badge severity-Orta">Orta</span></td>
+                                <td>40.0%</td>
+                                <td>36.0%</td>
+                                <td class="small">3 | 1 | 3 | 1 | 3 | 1 | 3 | 0 | 0 | 0 | 1 | 1 | 0 | 0 | 1</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Tavros</td>
+                                <td>18-24</td>
+                                <td>Erkek</td>
+                                <td>2</td>
+                                <td><span class="severity-badge severity-Minimal">Minimal</span></td>
+                                <td>4.4%</td>
+                                <td>2.6%</td>
+                                <td class="small">0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>deneme3</td>
+                                <td>18-24</td>
+                                <td>Erkek</td>
+                                <td>23</td>
+                                <td><span class="severity-badge severity-Orta">Orta</span></td>
+                                <td>51.1%</td>
+                                <td>70.4%</td>
+                                <td class="small">1 | 1 | 3 | 2 | 1 | 2 | 2 | 0 | 1 | 3 | 2 | 2 | 1 | 0 | 2</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>A</td>
+                                <td>18-24</td>
+                                <td>Erkek</td>
+                                <td>7</td>
+                                <td><span class="severity-badge severity-Minimal">Minimal</span></td>
+                                <td>15.6%</td>
+                                <td>9.7%</td>
+                                <td class="small">1 | 1 | 0 | 2 | 0 | 0 | 1 | 0 | 0 | 1 | 0 | 0 | 0 | 1 | 0</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Dr. Minik</td>
+                                <td>18-24</td>
+                                <td>Erkek</td>
+                                <td>11</td>
+                                <td><span class="severity-badge severity-Hafif">Hafif</span></td>
+                                <td>24.4%</td>
+                                <td>21.7%</td>
+                                <td class="small">0 | 1 | 1 | 1 | 1 | 0 | 1 | 0 | 0 | 2 | 1 | 0 | 1 | 1 | 1</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>M</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>14</td>
+                                <td><span class="severity-badge severity-Hafif">Hafif</span></td>
+                                <td>31.1%</td>
+                                <td>24.0%</td>
+                                <td class="small">1 | 1 | 1 | 1 | 0 | 1 | 1 | 0 | 2 | 1 | 0 | 1 | 1 | 1 | 2</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Jasmin</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>5</td>
+                                <td><span class="severity-badge severity-Minimal">Minimal</span></td>
+                                <td>11.1%</td>
+                                <td>6.7%</td>
+                                <td class="small">0 | 1 | 0 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>b80</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>16</td>
+                                <td><span class="severity-badge severity-Orta">Orta</span></td>
+                                <td>35.6%</td>
+                                <td>50.5%</td>
+                                <td class="small">1 | 2 | 0 | 1 | 1 | 3 | 1 | 0 | 0 | 3 | 1 | 1 | 0 | 0 | 2</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Casper</td>
+                                <td>35-44</td>
+                                <td>Erkek</td>
+                                <td>3</td>
+                                <td><span class="severity-badge severity-Minimal">Minimal</span></td>
+                                <td>6.7%</td>
+                                <td>4.0%</td>
+                                <td class="small">0 | 0 | 0 | 1 | 0 | 0 | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 0</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Melisa Mete </td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>4</td>
+                                <td><span class="severity-badge severity-Minimal">Minimal</span></td>
+                                <td>8.9%</td>
+                                <td>5.4%</td>
+                                <td class="small">0 | 1 | 0 | 0 | 1 | 1 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Son deneme sallıyom</td>
+                                <td>18-24</td>
+                                <td>Erkek</td>
+                                <td>18</td>
+                                <td><span class="severity-badge severity-Orta">Orta</span></td>
+                                <td>40.0%</td>
+                                <td>62.3%</td>
+                                <td class="small">0 | 1 | 2 | 2 | 2 | 2 | 0 | 0 | 1 | 2 | 1 | 2 | 2 | 0 | 1</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Yasmin</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>34</td>
+                                <td><span class="severity-badge severity-Siddetli">Siddetli</span></td>
+                                <td>75.6%</td>
+                                <td>85.4%</td>
+                                <td class="small">3 | 3 | 3 | 3 | 3 | 3 | 3 | 0 | 1 | 3 | 3 | 3 | 0 | 0 | 3</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Eren</td>
+                                <td>18-24</td>
+                                <td>Erkek</td>
+                                <td>10</td>
+                                <td><span class="severity-badge severity-Hafif">Hafif</span></td>
+                                <td>22.2%</td>
+                                <td>13.6%</td>
+                                <td class="small">3 | 1 | 0 | 0 | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 0 | 0 | 0 | 0</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Bdç</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>13</td>
+                                <td><span class="severity-badge severity-Hafif">Hafif</span></td>
+                                <td>28.9%</td>
+                                <td>24.9%</td>
+                                <td class="small">2 | 1 | 2 | 1 | 2 | 0 | 1 | 0 | 0 | 2 | 1 | 0 | 0 | 0 | 1</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Manolya</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>5</td>
+                                <td><span class="severity-badge severity-Minimal">Minimal</span></td>
+                                <td>11.1%</td>
+                                <td>6.7%</td>
+                                <td class="small">1 | 0 | 1 | 0 | 0 | 1 | 2 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>NIZAR GHAZALALMASRI</td>
+                                <td>18-24</td>
+                                <td>Erkek</td>
+                                <td>7</td>
+                                <td><span class="severity-badge severity-Minimal">Minimal</span></td>
+                                <td>15.6%</td>
+                                <td>9.8%</td>
+                                <td class="small">0 | 1 | 0 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 1 | 0 | 1 | 0 | 0</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>TMG</td>
+                                <td>18-24</td>
+                                <td>Erkek</td>
+                                <td>9</td>
+                                <td><span class="severity-badge severity-Hafif">Hafif</span></td>
+                                <td>20.0%</td>
+                                <td>13.2%</td>
+                                <td class="small">1 | 1 | 0 | 1 | 0 | 0 | 1 | 0 | 0 | 2 | 1 | 0 | 0 | 0 | 2</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>ZeySude</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>4</td>
+                                <td><span class="severity-badge severity-Minimal">Minimal</span></td>
+                                <td>8.9%</td>
+                                <td>5.4%</td>
+                                <td class="small">1 | 0 | 0 | 1 | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Umut </td>
+                                <td>18-24</td>
+                                <td>Erkek</td>
+                                <td>18</td>
+                                <td><span class="severity-badge severity-Orta">Orta</span></td>
+                                <td>40.0%</td>
+                                <td>60.5%</td>
+                                <td class="small">2 | 1 | 1 | 3 | 1 | 2 | 1 | 0 | 1 | 1 | 2 | 1 | 1 | 0 | 1</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Anonim22</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>19</td>
+                                <td><span class="severity-badge severity-Orta">Orta</span></td>
+                                <td>42.2%</td>
+                                <td>63.5%</td>
+                                <td class="small">1 | 1 | 0 | 2 | 2 | 1 | 2 | 0 | 1 | 3 | 0 | 1 | 1 | 1 | 3</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Cy</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>11</td>
+                                <td><span class="severity-badge severity-Hafif">Hafif</span></td>
+                                <td>24.4%</td>
+                                <td>17.6%</td>
+                                <td class="small">3 | 0 | 0 | 1 | 1 | 0 | 1 | 0 | 0 | 1 | 1 | 1 | 1 | 0 | 1</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>John Doe </td>
+                                <td>35-44</td>
+                                <td>Erkek</td>
+                                <td>1</td>
+                                <td><span class="severity-badge severity-Minimal">Minimal</span></td>
+                                <td>2.2%</td>
+                                <td>1.3%</td>
+                                <td class="small">0 | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Sniper</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>7</td>
+                                <td><span class="severity-badge severity-Minimal">Minimal</span></td>
+                                <td>15.6%</td>
+                                <td>9.5%</td>
+                                <td class="small">0 | 1 | 0 | 0 | 0 | 1 | 2 | 0 | 0 | 0 | 1 | 1 | 1 | 0 | 0</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Fatemeh HAZRATI</td>
+                                <td>25-34</td>
+                                <td>Kadin</td>
+                                <td>8</td>
+                                <td><span class="severity-badge severity-Hafif">Hafif</span></td>
+                                <td>17.8%</td>
+                                <td>10.9%</td>
+                                <td class="small">0 | 0 | 2 | 1 | 1 | 0 | 1 | 0 | 1 | 0 | 0 | 0 | 1 | 0 | 1</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>İYB</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>11</td>
+                                <td><span class="severity-badge severity-Hafif">Hafif</span></td>
+                                <td>24.4%</td>
+                                <td>18.2%</td>
+                                <td class="small">1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 1 | 1 | 1 | 1 | 0 | 0</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Bilge Türker</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>17</td>
+                                <td><span class="severity-badge severity-Orta">Orta</span></td>
+                                <td>37.8%</td>
+                                <td>57.1%</td>
+                                <td class="small">1 | 2 | 0 | 1 | 3 | 2 | 2 | 0 | 0 | 2 | 1 | 1 | 1 | 0 | 1</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Edibe Eylül Çengel</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>8</td>
+                                <td><span class="severity-badge severity-Hafif">Hafif</span></td>
+                                <td>17.8%</td>
+                                <td>10.8%</td>
+                                <td class="small">1 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 1</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Firdevs </td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>9</td>
+                                <td><span class="severity-badge severity-Hafif">Hafif</span></td>
+                                <td>20.0%</td>
+                                <td>12.7%</td>
+                                <td class="small">1 | 1 | 0 | 1 | 0 | 2 | 2 | 0 | 0 | 2 | 0 | 0 | 0 | 0 | 0</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Beyz</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>13</td>
+                                <td><span class="severity-badge severity-Hafif">Hafif</span></td>
+                                <td>28.9%</td>
+                                <td>23.9%</td>
+                                <td class="small">0 | 1 | 2 | 1 | 2 | 2 | 2 | 0 | 0 | 2 | 0 | 1 | 0 | 0 | 0</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Eno</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>15</td>
+                                <td><span class="severity-badge severity-Hafif">Hafif</span></td>
+                                <td>33.3%</td>
+                                <td>48.2%</td>
+                                <td class="small">1 | 2 | 0 | 1 | 0 | 2 | 0 | 0 | 1 | 2 | 2 | 2 | 1 | 0 | 1</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Lotus.</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>5</td>
+                                <td><span class="severity-badge severity-Minimal">Minimal</span></td>
+                                <td>11.1%</td>
+                                <td>6.7%</td>
+                                <td class="small">1 | 1 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 1 | 1 | 0 | 0 | 0 | 0</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>atahan</td>
+                                <td>18-24</td>
+                                <td>Erkek</td>
+                                <td>4</td>
+                                <td><span class="severity-badge severity-Minimal">Minimal</span></td>
+                                <td>8.9%</td>
+                                <td>5.4%</td>
+                                <td class="small">0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 3 | 0 | 0 | 0 | 0 | 0 | 0</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Fatima </td>
+                                <td>25-34</td>
+                                <td>Kadin</td>
+                                <td>15</td>
+                                <td><span class="severity-badge severity-Hafif">Hafif</span></td>
+                                <td>33.3%</td>
+                                <td>28.6%</td>
+                                <td class="small">1 | 1 | 1 | 1 | 1 | 1 | 3 | 0 | 2 | 2 | 0 | 1 | 0 | 0 | 1</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>maixnea</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>13</td>
+                                <td><span class="severity-badge severity-Hafif">Hafif</span></td>
+                                <td>28.9%</td>
+                                <td>27.2%</td>
+                                <td class="small">1 | 1 | 0 | 2 | 0 | 2 | 2 | 0 | 1 | 2 | 1 | 0 | 0 | 0 | 1</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Zeynep</td>
+                                <td>18-24</td>
+                                <td>Kadin</td>
+                                <td>20</td>
+                                <td><span class="severity-badge severity-Orta">Orta</span></td>
+                                <td>44.4%</td>
+                                <td>63.4%</td>
+                                <td class="small">0 | 1 | 3 | 1 | 3 | 3 | 3 | 0 | 1 | 2 | 2 | 0 | 0 | 0 | 1</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Aslanbey</td>
+                                <td>18-24</td>
+                                <td>Erkek</td>
+                                <td>13</td>
+                                <td><span class="severity-badge severity-Hafif">Hafif</span></td>
+                                <td>28.9%</td>
+                                <td>20.0%</td>
+                                <td class="small">1 | 0 | 0 | 1 | 2 | 3 | 3 | 0 | 1 | 0 | 0 | 0 | 1 | 0 | 1</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>EMİN</td>
+                                <td>18-24</td>
+                                <td>Erkek</td>
+                                <td>12</td>
+                                <td><span class="severity-badge severity-Hafif">Hafif</span></td>
+                                <td>26.7%</td>
+                                <td>17.9%</td>
+                                <td class="small">1 | 1 | 2 | 1 | 1 | 1 | 2 | 0 | 0 | 1 | 1 | 0 | 0 | 0 | 1</td>
+                            </tr>
+                            
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center text-secondary">
+        <small>PHQ-9 Depresyon Analiz Projesi | Olusturulma: 2026-04-19 11:37</small>
+    </footer>
+
+    <!-- Plotly Chart Scripts -->
+    <script>
+        var darkLayout = {
+            paper_bgcolor: '#16213e',
+            plot_bgcolor: '#16213e',
+            font: { color: '#e8e8e8' },
+            margin: { t: 40, b: 40, l: 50, r: 20 },
+            xaxis: { gridcolor: 'rgba(52,152,219,0.1)' },
+            yaxis: { gridcolor: 'rgba(52,152,219,0.1)' },
+        };
+        var config = { responsive: true, displayModeBar: false };
+
+        // Chart data injected from Python
+        Plotly.newPlot('chart-severity-pie', [{"hole": 0.4, "labels": ["Minimal", "Hafif", "Orta", "Orta-Siddetli", "Siddetli"], "marker": {"colors": ["#2ecc71", "#f39c12", "#e67e22", "#e74c3c", "#c0392b"]}, "textinfo": "label+percent+value", "values": [23, 26, 15, 3, 3], "type": "pie"}], Object.assign({}, darkLayout, {"template": {"data": {"histogram2dcontour": [{"type": "histogram2dcontour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "choropleth": [{"type": "choropleth", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "histogram2d": [{"type": "histogram2d", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "heatmap": [{"type": "heatmap", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "contourcarpet": [{"type": "contourcarpet", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "contour": [{"type": "contour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "surface": [{"type": "surface", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "mesh3d": [{"type": "mesh3d", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "scatter": [{"fillpattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}, "type": "scatter"}], "parcoords": [{"type": "parcoords", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolargl": [{"type": "scatterpolargl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "bar": [{"error_x": {"color": "#2a3f5f"}, "error_y": {"color": "#2a3f5f"}, "marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "bar"}], "scattergeo": [{"type": "scattergeo", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolar": [{"type": "scatterpolar", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "histogram": [{"marker": {"pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "histogram"}], "scattergl": [{"type": "scattergl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatter3d": [{"type": "scatter3d", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermap": [{"type": "scattermap", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermapbox": [{"type": "scattermapbox", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterternary": [{"type": "scatterternary", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattercarpet": [{"type": "scattercarpet", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "carpet": [{"aaxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "baxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "type": "carpet"}], "table": [{"cells": {"fill": {"color": "#EBF0F8"}, "line": {"color": "white"}}, "header": {"fill": {"color": "#C8D4E3"}, "line": {"color": "white"}}, "type": "table"}], "barpolar": [{"marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "barpolar"}], "pie": [{"automargin": true, "type": "pie"}]}, "layout": {"autotypenumbers": "strict", "colorway": ["#636efa", "#EF553B", "#00cc96", "#ab63fa", "#FFA15A", "#19d3f3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52"], "font": {"color": "#2a3f5f"}, "hovermode": "closest", "hoverlabel": {"align": "left"}, "paper_bgcolor": "white", "plot_bgcolor": "#E5ECF6", "polar": {"bgcolor": "#E5ECF6", "angularaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "radialaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "ternary": {"bgcolor": "#E5ECF6", "aaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "baxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "caxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "coloraxis": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "colorscale": {"sequential": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "sequentialminus": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "diverging": [[0, "#8e0152"], [0.1, "#c51b7d"], [0.2, "#de77ae"], [0.3, "#f1b6da"], [0.4, "#fde0ef"], [0.5, "#f7f7f7"], [0.6, "#e6f5d0"], [0.7, "#b8e186"], [0.8, "#7fbc41"], [0.9, "#4d9221"], [1, "#276419"]]}, "xaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "yaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "scene": {"xaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "yaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "zaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}}, "shapedefaults": {"line": {"color": "#2a3f5f"}}, "annotationdefaults": {"arrowcolor": "#2a3f5f", "arrowhead": 0, "arrowwidth": 1}, "geo": {"bgcolor": "white", "landcolor": "#E5ECF6", "subunitcolor": "white", "showland": true, "showlakes": true, "lakecolor": "white"}, "title": {"x": 0.05}, "mapbox": {"style": "light"}}}, "title": {"text": "Depresyon Siddet Dagilimi"}, "height": 400}), config);
+Plotly.newPlot('chart-radar', [{"fill": "toself", "line": {"color": "#3498db"}, "name": "Ortalama Skor", "r": [1.0142857142857142, 0.9714285714285714, 0.8571428571428571, 1.1142857142857143, 1.042857142857143, 1.0857142857142856, 1.4428571428571428, 0.0, 0.5714285714285714, 1.1285714285714286, 0.8428571428571429, 0.6857142857142857, 0.6142857142857143, 0.24285714285714285, 0.9571428571428572, 1.0142857142857142], "theta": ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "S10", "S11", "S12", "S13", "S14", "S15", "S1"], "type": "scatterpolar"}], Object.assign({}, darkLayout, {"template": {"data": {"histogram2dcontour": [{"type": "histogram2dcontour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "choropleth": [{"type": "choropleth", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "histogram2d": [{"type": "histogram2d", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "heatmap": [{"type": "heatmap", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "contourcarpet": [{"type": "contourcarpet", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "contour": [{"type": "contour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "surface": [{"type": "surface", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "mesh3d": [{"type": "mesh3d", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "scatter": [{"fillpattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}, "type": "scatter"}], "parcoords": [{"type": "parcoords", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolargl": [{"type": "scatterpolargl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "bar": [{"error_x": {"color": "#2a3f5f"}, "error_y": {"color": "#2a3f5f"}, "marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "bar"}], "scattergeo": [{"type": "scattergeo", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolar": [{"type": "scatterpolar", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "histogram": [{"marker": {"pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "histogram"}], "scattergl": [{"type": "scattergl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatter3d": [{"type": "scatter3d", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermap": [{"type": "scattermap", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermapbox": [{"type": "scattermapbox", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterternary": [{"type": "scatterternary", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattercarpet": [{"type": "scattercarpet", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "carpet": [{"aaxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "baxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "type": "carpet"}], "table": [{"cells": {"fill": {"color": "#EBF0F8"}, "line": {"color": "white"}}, "header": {"fill": {"color": "#C8D4E3"}, "line": {"color": "white"}}, "type": "table"}], "barpolar": [{"marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "barpolar"}], "pie": [{"automargin": true, "type": "pie"}]}, "layout": {"autotypenumbers": "strict", "colorway": ["#636efa", "#EF553B", "#00cc96", "#ab63fa", "#FFA15A", "#19d3f3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52"], "font": {"color": "#2a3f5f"}, "hovermode": "closest", "hoverlabel": {"align": "left"}, "paper_bgcolor": "white", "plot_bgcolor": "#E5ECF6", "polar": {"bgcolor": "#E5ECF6", "angularaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "radialaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "ternary": {"bgcolor": "#E5ECF6", "aaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "baxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "caxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "coloraxis": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "colorscale": {"sequential": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "sequentialminus": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "diverging": [[0, "#8e0152"], [0.1, "#c51b7d"], [0.2, "#de77ae"], [0.3, "#f1b6da"], [0.4, "#fde0ef"], [0.5, "#f7f7f7"], [0.6, "#e6f5d0"], [0.7, "#b8e186"], [0.8, "#7fbc41"], [0.9, "#4d9221"], [1, "#276419"]]}, "xaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "yaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "scene": {"xaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "yaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "zaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}}, "shapedefaults": {"line": {"color": "#2a3f5f"}}, "annotationdefaults": {"arrowcolor": "#2a3f5f", "arrowhead": 0, "arrowwidth": 1}, "geo": {"bgcolor": "white", "landcolor": "#E5ECF6", "subunitcolor": "white", "showland": true, "showlakes": true, "lakecolor": "white"}, "title": {"x": 0.05}, "mapbox": {"style": "light"}}}, "polar": {"radialaxis": {"visible": true, "range": [0, 3]}}, "title": {"text": "Soru Bazli Ortalama Skorlar (Radar)"}, "height": 450}), config);
+Plotly.newPlot('chart-age-scatter', [{"hovertemplate": "Katilimci: %{text}<br>Yas: %{x}<br>Skor: %{y}<extra></extra>", "marker": {"color": ["#f39c12", "#e74c3c", "#2ecc71", "#2ecc71", "#e67e22", "#e67e22", "#e67e22", "#e74c3c", "#2ecc71", "#e67e22", "#f39c12", "#2ecc71", "#c0392b", "#f39c12", "#e67e22", "#e67e22", "#f39c12", "#2ecc71", "#2ecc71", "#f39c12", "#c0392b", "#2ecc71", "#f39c12", "#f39c12", "#2ecc71", "#e74c3c", "#e67e22", "#2ecc71", "#2ecc71", "#f39c12", "#f39c12", "#2ecc71", "#f39c12", "#e67e22", "#2ecc71", "#e67e22", "#2ecc71", "#f39c12", "#f39c12", "#2ecc71", "#e67e22", "#2ecc71", "#2ecc71", "#e67e22", "#c0392b", "#f39c12", "#f39c12", "#2ecc71", "#2ecc71", "#f39c12", "#2ecc71", "#e67e22", "#e67e22", "#f39c12", "#2ecc71", "#2ecc71", "#f39c12", "#f39c12", "#e67e22", "#f39c12", "#f39c12", "#f39c12", "#f39c12", "#2ecc71", "#2ecc71", "#f39c12", "#f39c12", "#e67e22", "#f39c12", "#f39c12"], "line": {"color": "white", "width": 1}, "opacity": 0.7, "size": 10}, "mode": "markers", "text": ["ms", "Emre Budul\u011fan ", "Sema ", "Cem", "Nberar", "yaren k\u00f6m\u00fcrc\u00fc ", "Feyza ", "Narmin ", "Es", "Data61", "Havvadudu", "Ali", "Yaztugcee", "kkoc", "Anonim", "Batuhan Sar\u0131", "Ses", "Erdem Ak\u00e7ay", "b2", "Medivra ", "Mihri", "Sude", "Ay\u015fenur Aydemir", "Dilruba", "Esma", "gozde", "brookline", "Mimar Sinan ", "Ases", "zeynep tosun", "Tamara", "beat", "Pembe panter", "S\u00fcm", "Tavros", "deneme3", "A", "Dr. Minik", "M", "Jasmin", "b80", "Casper", "Melisa Mete ", "Son deneme sall\u0131yom", "Yasmin", "Eren", "Bd\u00e7", "Manolya", "NIZAR GHAZALALMASRI", "TMG", "ZeySude", "Umut ", "Anonim22", "Cy", "John Doe ", "Sniper", "Fatemeh HAZRATI", "\u0130YB", "Bilge T\u00fcrker", "Edibe Eyl\u00fcl \u00c7engel", "Firdevs ", "Beyz", "Eno", "Lotus.", "atahan", "Fatima ", "maixnea", "Zeynep", "Aslanbey", "EM\u0130N"], "x": {"dtype": "f8", "bdata": "AAAAAAAANUAAAAAAAAA1QAAAAAAAADVAAAAAAAAANUAAAAAAAAA1QAAAAAAAADVAAAAAAAAANUAAAAAAAAA1QAAAAAAAADVAAAAAAAAANUAAAAAAAAA1QAAAAAAAgFFAAAAAAAAANUAAAAAAAIA9QAAAAAAAADVAAAAAAAAANUAAAAAAAAA1QAAAAAAAADVAAAAAAAAANUAAAAAAAAA1QAAAAAAAADVAAAAAAAAANUAAAAAAAAA1QAAAAAAAgD1AAAAAAAAANUAAAAAAAAA1QAAAAAAAgD1AAAAAAACAPUAAAAAAAAA1QAAAAAAAADVAAAAAAAAANUAAAAAAAAA1QAAAAAAAADVAAAAAAAAANUAAAAAAAAA1QAAAAAAAADVAAAAAAAAANUAAAAAAAAA1QAAAAAAAADVAAAAAAAAANUAAAAAAAAA1QAAAAAAAwENAAAAAAAAANUAAAAAAAAA1QAAAAAAAADVAAAAAAAAANUAAAAAAAAA1QAAAAAAAADVAAAAAAAAANUAAAAAAAAA1QAAAAAAAADVAAAAAAAAANUAAAAAAAAA1QAAAAAAAADVAAAAAAADAQ0AAAAAAAAA1QAAAAAAAgD1AAAAAAAAANUAAAAAAAAA1QAAAAAAAADVAAAAAAAAANUAAAAAAAAA1QAAAAAAAADVAAAAAAAAANUAAAAAAAAA1QAAAAAAAgD1AAAAAAAAANUAAAAAAAAA1QAAAAAAAADVAAAAAAAAANUA="}, "y": {"dtype": "i1", "bdata": "CRwFABQRFhoAEg0EJg4UEgoGBAgnBQ4MBx4QBQIODwcMEgIXBwsOBRADBBIiCg0FBwkEEhMLAQcICxEICQ0PBQQPDRQNDA=="}, "type": "scatter"}], Object.assign({}, darkLayout, {"template": {"data": {"histogram2dcontour": [{"type": "histogram2dcontour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "choropleth": [{"type": "choropleth", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "histogram2d": [{"type": "histogram2d", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "heatmap": [{"type": "heatmap", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "contourcarpet": [{"type": "contourcarpet", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "contour": [{"type": "contour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "surface": [{"type": "surface", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "mesh3d": [{"type": "mesh3d", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "scatter": [{"fillpattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}, "type": "scatter"}], "parcoords": [{"type": "parcoords", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolargl": [{"type": "scatterpolargl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "bar": [{"error_x": {"color": "#2a3f5f"}, "error_y": {"color": "#2a3f5f"}, "marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "bar"}], "scattergeo": [{"type": "scattergeo", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolar": [{"type": "scatterpolar", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "histogram": [{"marker": {"pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "histogram"}], "scattergl": [{"type": "scattergl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatter3d": [{"type": "scatter3d", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermap": [{"type": "scattermap", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermapbox": [{"type": "scattermapbox", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterternary": [{"type": "scatterternary", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattercarpet": [{"type": "scattercarpet", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "carpet": [{"aaxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "baxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "type": "carpet"}], "table": [{"cells": {"fill": {"color": "#EBF0F8"}, "line": {"color": "white"}}, "header": {"fill": {"color": "#C8D4E3"}, "line": {"color": "white"}}, "type": "table"}], "barpolar": [{"marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "barpolar"}], "pie": [{"automargin": true, "type": "pie"}]}, "layout": {"autotypenumbers": "strict", "colorway": ["#636efa", "#EF553B", "#00cc96", "#ab63fa", "#FFA15A", "#19d3f3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52"], "font": {"color": "#2a3f5f"}, "hovermode": "closest", "hoverlabel": {"align": "left"}, "paper_bgcolor": "white", "plot_bgcolor": "#E5ECF6", "polar": {"bgcolor": "#E5ECF6", "angularaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "radialaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "ternary": {"bgcolor": "#E5ECF6", "aaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "baxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "caxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "coloraxis": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "colorscale": {"sequential": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "sequentialminus": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "diverging": [[0, "#8e0152"], [0.1, "#c51b7d"], [0.2, "#de77ae"], [0.3, "#f1b6da"], [0.4, "#fde0ef"], [0.5, "#f7f7f7"], [0.6, "#e6f5d0"], [0.7, "#b8e186"], [0.8, "#7fbc41"], [0.9, "#4d9221"], [1, "#276419"]]}, "xaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "yaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "scene": {"xaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "yaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "zaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}}, "shapedefaults": {"line": {"color": "#2a3f5f"}}, "annotationdefaults": {"arrowcolor": "#2a3f5f", "arrowhead": 0, "arrowwidth": 1}, "geo": {"bgcolor": "white", "landcolor": "#E5ECF6", "subunitcolor": "white", "showland": true, "showlakes": true, "lakecolor": "white"}, "title": {"x": 0.05}, "mapbox": {"style": "light"}}}, "title": {"text": "Yas vs Depresyon Skoru"}, "xaxis": {"title": {"text": "Yas (tahmini)"}}, "yaxis": {"title": {"text": "PHQ-9 Toplam Skor"}}, "height": 400}), config);
+Plotly.newPlot('chart-gender-box', [{"boxmean": true, "name": "Erkek", "y": {"dtype": "i1", "bdata": "CRwABBIKBgUHAhcHCwMSCgcJEgEEDQw="}, "type": "box"}, {"boxmean": true, "name": "Kadin", "y": {"dtype": "i1", "bdata": "BRQRFhoAEg0mDhQECCcFDgwHHhACDg8MEg4FEAQiDQUEEwsHCAsRCAkNDwUPDRQ="}, "type": "box"}], Object.assign({}, darkLayout, {"template": {"data": {"histogram2dcontour": [{"type": "histogram2dcontour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "choropleth": [{"type": "choropleth", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "histogram2d": [{"type": "histogram2d", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "heatmap": [{"type": "heatmap", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "contourcarpet": [{"type": "contourcarpet", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "contour": [{"type": "contour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "surface": [{"type": "surface", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "mesh3d": [{"type": "mesh3d", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "scatter": [{"fillpattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}, "type": "scatter"}], "parcoords": [{"type": "parcoords", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolargl": [{"type": "scatterpolargl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "bar": [{"error_x": {"color": "#2a3f5f"}, "error_y": {"color": "#2a3f5f"}, "marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "bar"}], "scattergeo": [{"type": "scattergeo", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolar": [{"type": "scatterpolar", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "histogram": [{"marker": {"pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "histogram"}], "scattergl": [{"type": "scattergl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatter3d": [{"type": "scatter3d", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermap": [{"type": "scattermap", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermapbox": [{"type": "scattermapbox", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterternary": [{"type": "scatterternary", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattercarpet": [{"type": "scattercarpet", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "carpet": [{"aaxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "baxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "type": "carpet"}], "table": [{"cells": {"fill": {"color": "#EBF0F8"}, "line": {"color": "white"}}, "header": {"fill": {"color": "#C8D4E3"}, "line": {"color": "white"}}, "type": "table"}], "barpolar": [{"marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "barpolar"}], "pie": [{"automargin": true, "type": "pie"}]}, "layout": {"autotypenumbers": "strict", "colorway": ["#636efa", "#EF553B", "#00cc96", "#ab63fa", "#FFA15A", "#19d3f3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52"], "font": {"color": "#2a3f5f"}, "hovermode": "closest", "hoverlabel": {"align": "left"}, "paper_bgcolor": "white", "plot_bgcolor": "#E5ECF6", "polar": {"bgcolor": "#E5ECF6", "angularaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "radialaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "ternary": {"bgcolor": "#E5ECF6", "aaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "baxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "caxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "coloraxis": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "colorscale": {"sequential": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "sequentialminus": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "diverging": [[0, "#8e0152"], [0.1, "#c51b7d"], [0.2, "#de77ae"], [0.3, "#f1b6da"], [0.4, "#fde0ef"], [0.5, "#f7f7f7"], [0.6, "#e6f5d0"], [0.7, "#b8e186"], [0.8, "#7fbc41"], [0.9, "#4d9221"], [1, "#276419"]]}, "xaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "yaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "scene": {"xaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "yaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "zaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}}, "shapedefaults": {"line": {"color": "#2a3f5f"}}, "annotationdefaults": {"arrowcolor": "#2a3f5f", "arrowhead": 0, "arrowwidth": 1}, "geo": {"bgcolor": "white", "landcolor": "#E5ECF6", "subunitcolor": "white", "showland": true, "showlakes": true, "lakecolor": "white"}, "title": {"x": 0.05}, "mapbox": {"style": "light"}}}, "title": {"text": "Cinsiyet Bazli Depresyon Skor Dagilimi"}, "yaxis": {"title": {"text": "PHQ-9 Toplam Skor"}}, "height": 400}), config);
+Plotly.newPlot('chart-participant-bar', [{"marker": {"color": ["#2ecc71", "#2ecc71", "#2ecc71", "#2ecc71", "#2ecc71", "#2ecc71", "#2ecc71", "#2ecc71", "#2ecc71", "#2ecc71", "#2ecc71", "#2ecc71", "#2ecc71", "#2ecc71", "#2ecc71", "#2ecc71", "#2ecc71", "#2ecc71", "#2ecc71", "#2ecc71", "#2ecc71", "#2ecc71", "#2ecc71", "#f39c12", "#f39c12", "#f39c12", "#f39c12", "#f39c12", "#f39c12", "#f39c12", "#f39c12", "#f39c12", "#f39c12", "#f39c12", "#f39c12", "#f39c12", "#f39c12", "#f39c12", "#f39c12", "#f39c12", "#f39c12", "#f39c12", "#f39c12", "#f39c12", "#f39c12", "#f39c12", "#f39c12", "#f39c12", "#f39c12", "#e67e22", "#e67e22", "#e67e22", "#e67e22", "#e67e22", "#e67e22", "#e67e22", "#e67e22", "#e67e22", "#e67e22", "#e67e22", "#e67e22", "#e67e22", "#e67e22", "#e67e22", "#e74c3c", "#e74c3c", "#e74c3c", "#c0392b", "#c0392b", "#c0392b"]}, "orientation": "h", "text": {"dtype": "f8", "bdata": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAPA/AAAAAAAAAEAAAAAAAAAAQAAAAAAAAAhAAAAAAAAAEEAAAAAAAAAQQAAAAAAAABBAAAAAAAAAEEAAAAAAAAAQQAAAAAAAABRAAAAAAAAAFEAAAAAAAAAUQAAAAAAAABRAAAAAAAAAFEAAAAAAAAAUQAAAAAAAABhAAAAAAAAAHEAAAAAAAAAcQAAAAAAAABxAAAAAAAAAHEAAAAAAAAAcQAAAAAAAACBAAAAAAAAAIEAAAAAAAAAgQAAAAAAAACJAAAAAAAAAIkAAAAAAAAAiQAAAAAAAACRAAAAAAAAAJEAAAAAAAAAmQAAAAAAAACZAAAAAAAAAJkAAAAAAAAAoQAAAAAAAAChAAAAAAAAAKEAAAAAAAAAqQAAAAAAAACpAAAAAAAAAKkAAAAAAAAAqQAAAAAAAACpAAAAAAAAALEAAAAAAAAAsQAAAAAAAACxAAAAAAAAALEAAAAAAAAAuQAAAAAAAAC5AAAAAAAAALkAAAAAAAAAwQAAAAAAAADBAAAAAAAAAMUAAAAAAAAAxQAAAAAAAADJAAAAAAAAAMkAAAAAAAAAyQAAAAAAAADJAAAAAAAAAMkAAAAAAAAAzQAAAAAAAADRAAAAAAAAANEAAAAAAAAA0QAAAAAAAADZAAAAAAAAAN0AAAAAAAAA6QAAAAAAAADxAAAAAAAAAPkAAAAAAAABBQAAAAAAAAENAAAAAAACAQ0A="}, "textposition": "outside", "x": {"dtype": "i1", "bdata": "AAABAgIDBAQEBAQFBQUFBQUGBwcHBwcICAgJCQkKCgsLCwwMDA0NDQ0NDg4ODg8PDxAQERESEhISEhMUFBQWFxocHiImJw=="}, "y": ["Cem", "Es", "John Doe ", "Tavros", "Ases", "Casper", "atahan", "b2", "Melisa Mete ", "Ali", "ZeySude", "Jasmin", "Sude", "Manolya", "Mimar Sinan ", "Lotus.", "Sema ", "Erdem Ak\u00e7ay", "Sniper", "A", "Esma", "beat", "NIZAR GHAZALALMASRI", "Fatemeh HAZRATI", "Edibe Eyl\u00fcl \u00c7engel", "Medivra ", "Firdevs ", "TMG", "ms", "Eren", "Ses", "\u0130YB", "Dr. Minik", "Cy", "EM\u0130N", "Pembe panter", "Dilruba", "maixnea", "Beyz", "Aslanbey", "Havvadudu", "Bd\u00e7", "zeynep tosun", "kkoc", "Ay\u015fenur Aydemir", "M", "Tamara", "Fatima ", "Eno", "b80", "brookline", "yaren k\u00f6m\u00fcrc\u00fc ", "Bilge T\u00fcrker", "S\u00fcm", "Data61", "Son deneme sall\u0131yom", "Umut ", "Batuhan Sar\u0131", "Anonim22", "Anonim", "Nberar", "Zeynep", "Feyza ", "deneme3", "Narmin ", "Emre Budul\u011fan ", "gozde", "Yasmin", "Yaztugcee", "Mihri"], "type": "bar"}], Object.assign({}, darkLayout, {"template": {"data": {"histogram2dcontour": [{"type": "histogram2dcontour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "choropleth": [{"type": "choropleth", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "histogram2d": [{"type": "histogram2d", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "heatmap": [{"type": "heatmap", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "contourcarpet": [{"type": "contourcarpet", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "contour": [{"type": "contour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "surface": [{"type": "surface", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "mesh3d": [{"type": "mesh3d", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "scatter": [{"fillpattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}, "type": "scatter"}], "parcoords": [{"type": "parcoords", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolargl": [{"type": "scatterpolargl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "bar": [{"error_x": {"color": "#2a3f5f"}, "error_y": {"color": "#2a3f5f"}, "marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "bar"}], "scattergeo": [{"type": "scattergeo", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolar": [{"type": "scatterpolar", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "histogram": [{"marker": {"pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "histogram"}], "scattergl": [{"type": "scattergl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatter3d": [{"type": "scatter3d", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermap": [{"type": "scattermap", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermapbox": [{"type": "scattermapbox", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterternary": [{"type": "scatterternary", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattercarpet": [{"type": "scattercarpet", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "carpet": [{"aaxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "baxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "type": "carpet"}], "table": [{"cells": {"fill": {"color": "#EBF0F8"}, "line": {"color": "white"}}, "header": {"fill": {"color": "#C8D4E3"}, "line": {"color": "white"}}, "type": "table"}], "barpolar": [{"marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "barpolar"}], "pie": [{"automargin": true, "type": "pie"}]}, "layout": {"autotypenumbers": "strict", "colorway": ["#636efa", "#EF553B", "#00cc96", "#ab63fa", "#FFA15A", "#19d3f3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52"], "font": {"color": "#2a3f5f"}, "hovermode": "closest", "hoverlabel": {"align": "left"}, "paper_bgcolor": "white", "plot_bgcolor": "#E5ECF6", "polar": {"bgcolor": "#E5ECF6", "angularaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "radialaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "ternary": {"bgcolor": "#E5ECF6", "aaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "baxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "caxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "coloraxis": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "colorscale": {"sequential": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "sequentialminus": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "diverging": [[0, "#8e0152"], [0.1, "#c51b7d"], [0.2, "#de77ae"], [0.3, "#f1b6da"], [0.4, "#fde0ef"], [0.5, "#f7f7f7"], [0.6, "#e6f5d0"], [0.7, "#b8e186"], [0.8, "#7fbc41"], [0.9, "#4d9221"], [1, "#276419"]]}, "xaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "yaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "scene": {"xaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "yaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "zaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}}, "shapedefaults": {"line": {"color": "#2a3f5f"}}, "annotationdefaults": {"arrowcolor": "#2a3f5f", "arrowhead": 0, "arrowwidth": 1}, "geo": {"bgcolor": "white", "landcolor": "#E5ECF6", "subunitcolor": "white", "showland": true, "showlakes": true, "lakecolor": "white"}, "title": {"x": 0.05}, "mapbox": {"style": "light"}}}, "title": {"text": "Katilimci Bazli PHQ-9 Skorlari"}, "xaxis": {"title": {"text": "Toplam Skor"}}, "yaxis": {"title": {"text": "Katilimci"}}, "height": 1750}), config);
+Plotly.newPlot('chart-cluster', [{"hovertemplate": "Katilimci: %{text}<br>PC1: %{x:.2f}<br>PC2: %{y:.2f}<extra></extra>", "marker": {"opacity": 0.7, "size": 10}, "mode": "markers", "name": "Grup 1", "text": ["Nberar", "yaren k\u00f6m\u00fcrc\u00fc ", "Feyza ", "Data61", "Havvadudu", "kkoc", "Anonim", "Batuhan Sar\u0131", "Ay\u015fenur Aydemir", "Dilruba", "brookline", "zeynep tosun", "Tamara", "Pembe panter", "S\u00fcm", "deneme3", "Dr. Minik", "M", "b80", "Son deneme sall\u0131yom", "Bd\u00e7", "Umut ", "Anonim22", "\u0130YB", "Bilge T\u00fcrker", "Beyz", "Eno", "Fatima ", "maixnea", "Zeynep", "Aslanbey", "EM\u0130N"], "x": {"dtype": "f8", "bdata": "f12oIc6ZAkCC97e5fvjyP0GabHzh3wZA5yu4sbVi+T/cb5WLerHBP8UTc1dchNQ/FUuws2UOAUCjlj2ZAZf4P8UYAXBRLuY/tx1/JcAcx7+KxWe8LUPrP/g8HLok994/g3ib6ICO7j+XUTquGaeXP1ci5NPXbfc/VdC4jvLmCEC9C6Fu8Vzbv0AVCPCXN9Q/vY5VvO8z8z/6/cBmW/r7PyKhZEyZb2y/LRgGe/dd/D/2I/H+Ugr9P/If41XS/da/4C6gyjPx9j8Cq6pt+SaXP61WH7KZ6/A/nIP+2m+02D8RBu1dikKzP5tWSCTknv8/PZZhaullvb+azTVDstHNvw=="}, "y": {"dtype": "f8", "bdata": "KUDJs1Mwj78AuS6Io+r4P6bsnPIGsglARlqBjkPCDsD/Yblfif3pvw3NCIPzRsu/+3rrx6r38b8qi4IuxUDbP8n2XvKOc/K/hmOAwKNFz7/f28DhmcPiP7l6/JQgaek/2XYO8AO24j/GpeE+rEftv0C856WOOARAdRg78uaUwT+TLgX0EHnZP9iLY098ZvW/mmaW/c108r94tvoQPAGBvwEeF5Ie5us/R0f1mZ9q5L8bdHANVD/gv+hUiTDmadI/yqIyuj6TzD8sCnMZiB79P6lnXSgzsALAR65C0YZc1b8jKhV6nM7wvzHQo4IqPv8/YYMie/v14T8PgB92im7wPw=="}, "type": "scatter"}, {"hovertemplate": "Katilimci: %{text}<br>PC1: %{x:.2f}<br>PC2: %{y:.2f}<extra></extra>", "marker": {"opacity": 0.7, "size": 10}, "mode": "markers", "name": "Grup 2", "text": ["Emre Budul\u011fan ", "Narmin ", "Yaztugcee", "Mihri", "gozde", "Yasmin"], "x": {"dtype": "f8", "bdata": "7EzW4hDWEUDHJzGXbOoQQJdMnU8ViB9A9UQeIY1jIEDdNhTQ0NsVQAeq9iIpZhpA"}, "y": {"dtype": "f8", "bdata": "XYoNx3tcBcAjRJlnd9EHQExi1P7z8dY//BDnTg8zzz+6vnZfeQcAwBnzK3jrt9E/"}, "type": "scatter"}, {"hovertemplate": "Katilimci: %{text}<br>PC1: %{x:.2f}<br>PC2: %{y:.2f}<extra></extra>", "marker": {"opacity": 0.7, "size": 10}, "mode": "markers", "name": "Grup 3", "text": ["ms", "Sema ", "Cem", "Es", "Ali", "Ses", "Erdem Ak\u00e7ay", "b2", "Medivra ", "Sude", "Esma", "Mimar Sinan ", "Ases", "beat", "Tavros", "A", "Jasmin", "Casper", "Melisa Mete ", "Eren", "Manolya", "NIZAR GHAZALALMASRI", "TMG", "ZeySude", "Cy", "John Doe ", "Sniper", "Fatemeh HAZRATI", "Edibe Eyl\u00fcl \u00c7engel", "Firdevs ", "Lotus.", "atahan"], "x": {"dtype": "f8", "bdata": "To84EhiY8b+NQp2k3n8BwCW+/r2+EQ7AKL7+vb4RDsDEFsrMQCAFwAAwLYWEmey/o06pRmP+/79t6Oahl+AEwAyZyuTCxPW/uYDP7CzhAcCqm7vVWJT6v1GoU7TjDwLAmgD6UloRCsBVm66pjXr4v73iZRwkhgnAioryZMiP+b+ozN9wZ5IBwFgdHoiy1QfA5+QdG2VJBMD5pcoOReDvvwR1QsRlagPAaJnrlL0b+L/TdLAaczvwvwog/ZtxDAXAKlROoZ5c3r/8pIiWz1ILwCLL9GiJAvi/nTPMBQEC+b8SMGT/4Dv3vyBGqoajLvK/Fbn7E85ZAcDg44uA2pIHwA=="}, "y": {"dtype": "f8", "bdata": "piseNqJ+1T+eA6BoJMrUv38uXPMnUbE/uS5c8ydRsT/gFyPHmYTrv7k2W6eO5fK/cx9Hba75/T9JsGSJd5DRPyHYya7xdcA/e809gzQiwT8bGcHHCWHWP33epLDNJdK/ALDyJgkVxj+ZxPt0ilLjvzhqu5AUNLc/XLrDbQ5OwT8ZaBM20B7gPxRXt/QXzr+/hDRXAOolrL/zj/Po7dTNv+wixHtBmus/UjCsI6EDwz8piYUhf93vvxUdZWSP0eY/OqZJnA0z2L+wyiexDSrFP5tDW29Tn7O/vHzmPLzz6D8QG+XSp9XRP4dD99imstC/8kvCtk+e6b/LU+H6Td/1vw=="}, "type": "scatter"}], Object.assign({}, darkLayout, {"template": {"data": {"histogram2dcontour": [{"type": "histogram2dcontour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "choropleth": [{"type": "choropleth", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "histogram2d": [{"type": "histogram2d", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "heatmap": [{"type": "heatmap", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "contourcarpet": [{"type": "contourcarpet", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "contour": [{"type": "contour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "surface": [{"type": "surface", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "mesh3d": [{"type": "mesh3d", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "scatter": [{"fillpattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}, "type": "scatter"}], "parcoords": [{"type": "parcoords", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolargl": [{"type": "scatterpolargl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "bar": [{"error_x": {"color": "#2a3f5f"}, "error_y": {"color": "#2a3f5f"}, "marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "bar"}], "scattergeo": [{"type": "scattergeo", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolar": [{"type": "scatterpolar", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "histogram": [{"marker": {"pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "histogram"}], "scattergl": [{"type": "scattergl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatter3d": [{"type": "scatter3d", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermap": [{"type": "scattermap", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermapbox": [{"type": "scattermapbox", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterternary": [{"type": "scatterternary", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattercarpet": [{"type": "scattercarpet", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "carpet": [{"aaxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "baxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "type": "carpet"}], "table": [{"cells": {"fill": {"color": "#EBF0F8"}, "line": {"color": "white"}}, "header": {"fill": {"color": "#C8D4E3"}, "line": {"color": "white"}}, "type": "table"}], "barpolar": [{"marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "barpolar"}], "pie": [{"automargin": true, "type": "pie"}]}, "layout": {"autotypenumbers": "strict", "colorway": ["#636efa", "#EF553B", "#00cc96", "#ab63fa", "#FFA15A", "#19d3f3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52"], "font": {"color": "#2a3f5f"}, "hovermode": "closest", "hoverlabel": {"align": "left"}, "paper_bgcolor": "white", "plot_bgcolor": "#E5ECF6", "polar": {"bgcolor": "#E5ECF6", "angularaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "radialaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "ternary": {"bgcolor": "#E5ECF6", "aaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "baxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "caxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "coloraxis": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "colorscale": {"sequential": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "sequentialminus": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "diverging": [[0, "#8e0152"], [0.1, "#c51b7d"], [0.2, "#de77ae"], [0.3, "#f1b6da"], [0.4, "#fde0ef"], [0.5, "#f7f7f7"], [0.6, "#e6f5d0"], [0.7, "#b8e186"], [0.8, "#7fbc41"], [0.9, "#4d9221"], [1, "#276419"]]}, "xaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "yaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "scene": {"xaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "yaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "zaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}}, "shapedefaults": {"line": {"color": "#2a3f5f"}}, "annotationdefaults": {"arrowcolor": "#2a3f5f", "arrowhead": 0, "arrowwidth": 1}, "geo": {"bgcolor": "white", "landcolor": "#E5ECF6", "subunitcolor": "white", "showland": true, "showlakes": true, "lakecolor": "white"}, "title": {"x": 0.05}, "mapbox": {"style": "light"}}}, "title": {"text": "K-Means Cluster Analizi (PCA 2D)"}, "xaxis": {"title": {"text": "Birinci Bilesen (PC1)"}}, "yaxis": {"title": {"text": "Ikinci Bilesen (PC2)"}}, "height": 450}), config);
+Plotly.newPlot('chart-feature-importance', [{"marker": {"color": "#3498db"}, "orientation": "h", "x": [0.1012, 0.0928, 0.0859, 0.0832, 0.0764, 0.0761, 0.0754, 0.0726, 0.0711, 0.071, 0.0685, 0.0563, 0.0502, 0.0192, 0.0], "y": ["S15: Ya\u015fad\u0131\u011f\u0131n duygular\u0131 ba\u015fkalar\u0131y...", "S12: A\u00e7\u0131klanamayan bas a\u011fr\u0131lar\u0131, an...", "S5: \u0130\u015ftahs\u0131zl\u0131k, a\u015f\u0131r\u0131 yeme veya d...", "S7: Ders, i\u015f veya g\u00fcnl\u00fck i\u015flerde o...", "S13: Daha once zevk al\u0131nan hobilerd...", "S1: Bir \u015feyler yapmaya kar\u015f\u0131 ilgi,...", "S11: Kendini yaln\u0131z hissetme veya k...", "S4: S\u00fcrekli yorgunluk, enerjisizli...", "S2: Kendini \u00e7\u00f6km\u00fc\u015f, karamsar veya ...", "S9: Arkada\u015flarla g\u00f6r\u00fc\u015fmekten, d\u0131\u015fa...", "S3: Uykuya dalmada zorluk, gece s\u0131...", "S10: Gelecekle ilgili belirsizlik, ...", "S6: Kendini de\u011fersiz, ba\u015far\u0131s\u0131z ve...", "S14: Ke\u015fke ya\u015famasam, hayat bitse d...", "S8: Sosyal medyada ba\u015fkalar\u0131yla ke..."], "type": "bar"}], Object.assign({}, darkLayout, {"template": {"data": {"histogram2dcontour": [{"type": "histogram2dcontour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "choropleth": [{"type": "choropleth", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "histogram2d": [{"type": "histogram2d", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "heatmap": [{"type": "heatmap", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "contourcarpet": [{"type": "contourcarpet", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "contour": [{"type": "contour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "surface": [{"type": "surface", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "mesh3d": [{"type": "mesh3d", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "scatter": [{"fillpattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}, "type": "scatter"}], "parcoords": [{"type": "parcoords", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolargl": [{"type": "scatterpolargl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "bar": [{"error_x": {"color": "#2a3f5f"}, "error_y": {"color": "#2a3f5f"}, "marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "bar"}], "scattergeo": [{"type": "scattergeo", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolar": [{"type": "scatterpolar", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "histogram": [{"marker": {"pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "histogram"}], "scattergl": [{"type": "scattergl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatter3d": [{"type": "scatter3d", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermap": [{"type": "scattermap", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermapbox": [{"type": "scattermapbox", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterternary": [{"type": "scatterternary", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattercarpet": [{"type": "scattercarpet", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "carpet": [{"aaxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "baxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "type": "carpet"}], "table": [{"cells": {"fill": {"color": "#EBF0F8"}, "line": {"color": "white"}}, "header": {"fill": {"color": "#C8D4E3"}, "line": {"color": "white"}}, "type": "table"}], "barpolar": [{"marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "barpolar"}], "pie": [{"automargin": true, "type": "pie"}]}, "layout": {"autotypenumbers": "strict", "colorway": ["#636efa", "#EF553B", "#00cc96", "#ab63fa", "#FFA15A", "#19d3f3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52"], "font": {"color": "#2a3f5f"}, "hovermode": "closest", "hoverlabel": {"align": "left"}, "paper_bgcolor": "white", "plot_bgcolor": "#E5ECF6", "polar": {"bgcolor": "#E5ECF6", "angularaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "radialaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "ternary": {"bgcolor": "#E5ECF6", "aaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "baxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "caxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "coloraxis": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "colorscale": {"sequential": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "sequentialminus": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "diverging": [[0, "#8e0152"], [0.1, "#c51b7d"], [0.2, "#de77ae"], [0.3, "#f1b6da"], [0.4, "#fde0ef"], [0.5, "#f7f7f7"], [0.6, "#e6f5d0"], [0.7, "#b8e186"], [0.8, "#7fbc41"], [0.9, "#4d9221"], [1, "#276419"]]}, "xaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "yaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "scene": {"xaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "yaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "zaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}}, "shapedefaults": {"line": {"color": "#2a3f5f"}}, "annotationdefaults": {"arrowcolor": "#2a3f5f", "arrowhead": 0, "arrowwidth": 1}, "geo": {"bgcolor": "white", "landcolor": "#E5ECF6", "subunitcolor": "white", "showland": true, "showlakes": true, "lakecolor": "white"}, "title": {"x": 0.05}, "mapbox": {"style": "light"}}}, "title": {"text": "Random Forest - Soru Onem Sirasi"}, "xaxis": {"title": {"text": "Onem Skoru"}}, "height": 400}), config);
+Plotly.newPlot('chart-model-comparison', [{"marker": {"color": "#3498db"}, "name": "Test Accuracy", "x": ["Random Forest", "Logistic Regression", "SVM", "Decision Tree", "Gaussian NB"], "y": [0.6667, 0.8095, 0.7143, 0.619, 0.619], "type": "bar"}, {"marker": {"color": "#e74c3c"}, "name": "CV Ortalama", "x": ["Random Forest", "Logistic Regression", "SVM", "Decision Tree", "Gaussian NB"], "y": [0.7429, 0.9281, 0.7571, 0.5429, 0.6714], "type": "bar"}], Object.assign({}, darkLayout, {"template": {"data": {"histogram2dcontour": [{"type": "histogram2dcontour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "choropleth": [{"type": "choropleth", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "histogram2d": [{"type": "histogram2d", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "heatmap": [{"type": "heatmap", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "contourcarpet": [{"type": "contourcarpet", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "contour": [{"type": "contour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "surface": [{"type": "surface", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "mesh3d": [{"type": "mesh3d", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "scatter": [{"fillpattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}, "type": "scatter"}], "parcoords": [{"type": "parcoords", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolargl": [{"type": "scatterpolargl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "bar": [{"error_x": {"color": "#2a3f5f"}, "error_y": {"color": "#2a3f5f"}, "marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "bar"}], "scattergeo": [{"type": "scattergeo", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolar": [{"type": "scatterpolar", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "histogram": [{"marker": {"pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "histogram"}], "scattergl": [{"type": "scattergl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatter3d": [{"type": "scatter3d", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermap": [{"type": "scattermap", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermapbox": [{"type": "scattermapbox", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterternary": [{"type": "scatterternary", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattercarpet": [{"type": "scattercarpet", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "carpet": [{"aaxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "baxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "type": "carpet"}], "table": [{"cells": {"fill": {"color": "#EBF0F8"}, "line": {"color": "white"}}, "header": {"fill": {"color": "#C8D4E3"}, "line": {"color": "white"}}, "type": "table"}], "barpolar": [{"marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "barpolar"}], "pie": [{"automargin": true, "type": "pie"}]}, "layout": {"autotypenumbers": "strict", "colorway": ["#636efa", "#EF553B", "#00cc96", "#ab63fa", "#FFA15A", "#19d3f3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52"], "font": {"color": "#2a3f5f"}, "hovermode": "closest", "hoverlabel": {"align": "left"}, "paper_bgcolor": "white", "plot_bgcolor": "#E5ECF6", "polar": {"bgcolor": "#E5ECF6", "angularaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "radialaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "ternary": {"bgcolor": "#E5ECF6", "aaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "baxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "caxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "coloraxis": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "colorscale": {"sequential": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "sequentialminus": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "diverging": [[0, "#8e0152"], [0.1, "#c51b7d"], [0.2, "#de77ae"], [0.3, "#f1b6da"], [0.4, "#fde0ef"], [0.5, "#f7f7f7"], [0.6, "#e6f5d0"], [0.7, "#b8e186"], [0.8, "#7fbc41"], [0.9, "#4d9221"], [1, "#276419"]]}, "xaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "yaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "scene": {"xaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "yaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "zaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}}, "shapedefaults": {"line": {"color": "#2a3f5f"}}, "annotationdefaults": {"arrowcolor": "#2a3f5f", "arrowhead": 0, "arrowwidth": 1}, "geo": {"bgcolor": "white", "landcolor": "#E5ECF6", "subunitcolor": "white", "showland": true, "showlakes": true, "lakecolor": "white"}, "title": {"x": 0.05}, "mapbox": {"style": "light"}}}, "barmode": "group", "title": {"text": "ML Model Performans Karsilastirmasi"}, "yaxis": {"title": {"text": "Accuracy"}}, "height": 400}), config);
+Plotly.newPlot('chart-heatmap', [{"colorscale": [[0.0, "rgb(5,48,97)"], [0.1, "rgb(33,102,172)"], [0.2, "rgb(67,147,195)"], [0.3, "rgb(146,197,222)"], [0.4, "rgb(209,229,240)"], [0.5, "rgb(247,247,247)"], [0.6, "rgb(253,219,199)"], [0.7, "rgb(244,165,130)"], [0.8, "rgb(214,96,77)"], [0.9, "rgb(178,24,43)"], [1.0, "rgb(103,0,31)"]], "text": {"dtype": "f8", "bdata": "AAAAAAAA8D/sUbgehevhP+xRuB6F69E/mpmZmZmZ2T+uR+F6FK7XPx+F61G4HtU/cT0K16Nw3T8AAAAAAAD4f+xRuB6F69E/16NwPQrX0z9I4XoUrkfhP4XrUbgehds/UrgehetR2D9SuB6F61HIP7gehetRuN4/7FG4HoXr4T8AAAAAAADwP8P1KFyPwtU/uB6F61G43j+uR+F6FK7XPx+F61G4HuU/w/UoXI/C1T8AAAAAAAD4f+xRuB6F69E/PQrXo3A94j/D9Shcj8LlP0jhehSuR+E/SOF6FK5H4T8fhetRuB7VPzMzMzMzM+M/7FG4HoXr0T/D9Shcj8LVPwAAAAAAAPA/pHA9Ctej4D8fhetRuB7lP4XrUbgehds/UrgehetR4D8AAAAAAAD4f3sUrkfherQ/exSuR+F61D+kcD0K16PgP1K4HoXrUeA/j8L1KFyP0j+F61G4HoXbPz0K16NwPdo/mpmZmZmZ2T+4HoXrUbjeP6RwPQrXo+A/AAAAAAAA8D9SuB6F61HgP5qZmZmZmeE/KVyPwvUo3D8AAAAAAAD4f3E9CtejcM0/pHA9Ctej4D/sUbgehevhPylcj8L1KOQ/UrgehetR4D+4HoXrUbjeP5qZmZmZmeE/rkfhehSu1z+uR+F6FK7XPx+F61G4HuU/UrgehetR4D8AAAAAAADwPwAAAAAAAOA/PQrXo3A94j8AAAAAAAD4f3sUrkfheqQ/16NwPQrX0z+4HoXrUbjeP+F6FK5H4eI/w/UoXI/C1T9SuB6F61HYP+F6FK5H4do/H4XrUbge1T8fhetRuB7lP4XrUbgehds/mpmZmZmZ4T8AAAAAAADgPwAAAAAAAPA/XI/C9Shc3z8AAAAAAAD4f3E9CtejcM0/mpmZmZmZ4T+F61G4HoXjP0jhehSuR+E/cT0K16Nw3T8AAAAAAADQP1K4HoXrUeA/cT0K16Nw3T/D9Shcj8LVP1K4HoXrUeA/KVyPwvUo3D89CtejcD3iP1yPwvUoXN8/AAAAAAAA8D8AAAAAAAD4f6RwPQrXo9A/exSuR+F61D8fhetRuB7VPylcj8L1KNw/uB6F61G4zj+4HoXrUbjOP3sUrkfhetQ/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/7FG4HoXr0T/sUbgehevRP3sUrkfherQ/cT0K16NwzT97FK5H4XqkP3E9CtejcM0/pHA9Ctej0D8AAAAAAAD4fwAAAAAAAPA/CtejcD0Kxz8pXI/C9SjMP9ejcD0K19M/w/UoXI/C1T/D9Shcj8LFP4XrUbgehds/16NwPQrX0z89CtejcD3iP3sUrkfhetQ/pHA9Ctej4D/Xo3A9CtfTP5qZmZmZmeE/exSuR+F61D8AAAAAAAD4fwrXo3A9Csc/AAAAAAAA8D9cj8L1KFzfP7gehetRuN4/exSuR+F61D8pXI/C9Si8P7gehetRuN4/SOF6FK5H4T/D9Shcj8LlP6RwPQrXo+A/7FG4HoXr4T+4HoXrUbjeP4XrUbgeheM/H4XrUbge1T8AAAAAAAD4fylcj8L1KMw/XI/C9Shc3z8AAAAAAADwP4/C9Shcj+I/KVyPwvUo3D/D9Shcj8LVP3sUrkfheuQ/hetRuB6F2z9I4XoUrkfhP1K4HoXrUeA/KVyPwvUo5D/hehSuR+HiP0jhehSuR+E/KVyPwvUo3D8AAAAAAAD4f9ejcD0K19M/uB6F61G43j+PwvUoXI/iPwAAAAAAAPA/4XoUrkfh4j9SuB6F61HYP1K4HoXrUeA/UrgehetR2D9I4XoUrkfhP4/C9Shcj9I/UrgehetR4D/D9Shcj8LVP3E9CtejcN0/uB6F61G4zj8AAAAAAAD4f8P1KFyPwtU/exSuR+F61D8pXI/C9SjcP+F6FK5H4eI/AAAAAAAA8D89CtejcD3aP4XrUbgehds/UrgehetRyD8fhetRuB7VP4XrUbgehds/uB6F61G43j9SuB6F61HYPwAAAAAAANA/uB6F61G4zj8AAAAAAAD4f8P1KFyPwsU/KVyPwvUovD/D9Shcj8LVP1K4HoXrUdg/PQrXo3A92j8AAAAAAADwP+F6FK5H4do/uB6F61G43j8zMzMzMzPjPz0K16NwPdo/mpmZmZmZ4T/hehSuR+HaP1K4HoXrUeA/exSuR+F61D8AAAAAAAD4f4XrUbgehds/uB6F61G43j97FK5H4XrkP1K4HoXrUeA/hetRuB6F2z/hehSuR+HaPwAAAAAAAPA/", "shape": "15, 15"}, "texttemplate": "%{text}", "x": ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "S10", "S11", "S12", "S13", "S14", "S15"], "y": ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "S10", "S11", "S12", "S13", "S14", "S15"], "z": {"dtype": "f8", "bdata": "AAAAAAAA8D+D0yC2PQjiP8v6JQs1/9E/4otSzfax2T+OsnzgzLbXPwB79+bK09Q/k4UxFX503T8AAAAAAAD4f4IoFJwo5dE/zhZyFqMa1D98xEQrnU7hP0IAz3fmuts/McO8Qmsx2D8Ht/1New/IP5j0Coe+hd4/g9Mgtj0I4j8AAAAAAADwP8sPAWi5A9Y/va2pZZvt3j9gWR176JPXPyIDw0XUMOU/NhuPQZ3g1T8AAAAAAAD4fwWL89kd3NE/OzMCtp0m4j/WUzzFrJnlP1n/bFIeMOE/sgJnVFUw4T8zn91Cuh/VP/hKggOqQ+M/y/olCzX/0T/LDwFouQPWPwAAAAAAAPA/61nQRjB/4D+fEA8CDgLlP5UqTJSDl9s/q2jeoJc74D8AAAAAAAD4f9QXih7GYbU/ATms3emc1D+S6AnYQ4PgP8x1xBK4O+A/3LqnlRFr0j91uDmj/4vbP6YVUkOxfdo/4otSzfax2T+9rallm+3eP+tZ0EYwf+A/AAAAAAAA8D/Zvj8PjzbgP9PxD3BhfOE/EXbiXA893D8AAAAAAAD4fzVTtpLKVc0/5o1RM0684D/mwjRTf/jhP3UxoCRTAuQ/T92AgKoy4D+LgTItUpXePzEJA0MsluE/jrJ84My21z9gWR176JPXP58QDwIOAuU/2b4/D4824D8AAAAAAADwP7ybrUX1GOA/GxFBwtIx4j8AAAAAAAD4f2hrnOSnsKQ/SrZxAhbz0z8RsOTn+tXeP0H7sUVH9eI/LbaJNqPP1T+4N4OgvG/YP2wBUZ4S+No/AHv35srT1D8iA8NF1DDlP5UqTJSDl9s/0/EPcGF84T+8m61F9RjgPwAAAAAAAPA/uI+rEFsp3z8AAAAAAAD4f7ZmWCPiDs4/s/gctjaq4T+NA9TgrGvjP3Nww9+wIeE/oH/BnqY/3T8AwM4AToXPPzZjnoelVuA/k4UxFX503T82G49BneDVP6to3qCXO+A/EXbiXA893D8bEUHC0jHiP7iPqxBbKd8/AAAAAAAA8D8AAAAAAAD4f2SPmiDf19A/6ktnTO811D/Fvg1IH0zVP598Opvw+ds/+wUaGnS+zj+u4aqyPeDOP0UQO305T9Q/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/gigUnCjl0T8Fi/PZHdzRP9QXih7GYbU/NVO2kspVzT9oa5zkp7CkP7ZmWCPiDs4/ZI+aIN/X0D8AAAAAAAD4fwAAAAAAAPA/bL38kYbMxj8KJC9Ye+rLPxs/b4uoz9M//Eh8+ngC1j9/KSomREnGPxUof2eBSds/zhZyFqMa1D87MwK2nSbiPwE5rN3pnNQ/5o1RM0684D9KtnECFvPTP7P4HLY2quE/6ktnTO811D8AAAAAAAD4f2y9/JGGzMY/AAAAAAAA8D9pK2qKD3TfPz0noh/83N4/GBPKj7tU1D+gqwVK89i7PwyvXwqZwd4/fMREK51O4T/WUzzFrJnlP5LoCdhDg+A/5sI0U3/44T8RsOTn+tXeP40D1OCsa+M/xb4NSB9M1T8AAAAAAAD4fwokL1h76ss/aStqig903z8AAAAAAADwP6GZBL6UkuI/9ncmwOlX3D9hppTKcoDVP0Wn3HVMbeQ/QgDPd+a62z9Z/2xSHjDhP8x1xBK4O+A/dTGgJFMC5D9B+7FFR/XiP3Nww9+wIeE/n3w6m/D52z8AAAAAAAD4fxs/b4uoz9M/PSeiH/zc3j+hmQS+lJLiPwAAAAAAAPA/HxOp8xDS4j8J+ZknSmLYP8q+wW9qKeA/McO8Qmsx2D+yAmdUVTDhP9y6p5URa9I/T92AgKoy4D8ttok2o8/VP6B/wZ6mP90/+wUaGnS+zj8AAAAAAAD4f/xIfPp4AtY/GBPKj7tU1D/2dybA6VfcPx8TqfMQ0uI/AAAAAAAA8D+2Tyh6lvfZP9/TY2LNnNs/B7f9TXsPyD8zn91Cuh/VP3W4OaP/i9s/i4EyLVKV3j+4N4OgvG/YPwDAzgBOhc8/ruGqsj3gzj8AAAAAAAD4f38pKiZEScY/oKsFSvPYuz9hppTKcoDVPwn5mSdKYtg/tk8oepb32T8AAAAAAADwP9KFvROfodo/mPQKh76F3j/4SoIDqkPjP6YVUkOxfdo/MQkDQyyW4T9sAVGeEvjaPzZjnoelVuA/RRA7fTlP1D8AAAAAAAD4fxUof2eBSds/DK9fCpnB3j9Fp9x1TG3kP8q+wW9qKeA/39NjYs2c2z/Shb0Tn6HaPwAAAAAAAPA/", "shape": "15, 15"}, "zmax": 1, "zmin": -1, "type": "heatmap"}], Object.assign({}, darkLayout, {"template": {"data": {"histogram2dcontour": [{"type": "histogram2dcontour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "choropleth": [{"type": "choropleth", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "histogram2d": [{"type": "histogram2d", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "heatmap": [{"type": "heatmap", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "contourcarpet": [{"type": "contourcarpet", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "contour": [{"type": "contour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "surface": [{"type": "surface", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "mesh3d": [{"type": "mesh3d", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "scatter": [{"fillpattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}, "type": "scatter"}], "parcoords": [{"type": "parcoords", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolargl": [{"type": "scatterpolargl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "bar": [{"error_x": {"color": "#2a3f5f"}, "error_y": {"color": "#2a3f5f"}, "marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "bar"}], "scattergeo": [{"type": "scattergeo", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolar": [{"type": "scatterpolar", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "histogram": [{"marker": {"pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "histogram"}], "scattergl": [{"type": "scattergl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatter3d": [{"type": "scatter3d", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermap": [{"type": "scattermap", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermapbox": [{"type": "scattermapbox", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterternary": [{"type": "scatterternary", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattercarpet": [{"type": "scattercarpet", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "carpet": [{"aaxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "baxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "type": "carpet"}], "table": [{"cells": {"fill": {"color": "#EBF0F8"}, "line": {"color": "white"}}, "header": {"fill": {"color": "#C8D4E3"}, "line": {"color": "white"}}, "type": "table"}], "barpolar": [{"marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "barpolar"}], "pie": [{"automargin": true, "type": "pie"}]}, "layout": {"autotypenumbers": "strict", "colorway": ["#636efa", "#EF553B", "#00cc96", "#ab63fa", "#FFA15A", "#19d3f3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52"], "font": {"color": "#2a3f5f"}, "hovermode": "closest", "hoverlabel": {"align": "left"}, "paper_bgcolor": "white", "plot_bgcolor": "#E5ECF6", "polar": {"bgcolor": "#E5ECF6", "angularaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "radialaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "ternary": {"bgcolor": "#E5ECF6", "aaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "baxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "caxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "coloraxis": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "colorscale": {"sequential": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "sequentialminus": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "diverging": [[0, "#8e0152"], [0.1, "#c51b7d"], [0.2, "#de77ae"], [0.3, "#f1b6da"], [0.4, "#fde0ef"], [0.5, "#f7f7f7"], [0.6, "#e6f5d0"], [0.7, "#b8e186"], [0.8, "#7fbc41"], [0.9, "#4d9221"], [1, "#276419"]]}, "xaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "yaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "scene": {"xaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "yaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "zaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}}, "shapedefaults": {"line": {"color": "#2a3f5f"}}, "annotationdefaults": {"arrowcolor": "#2a3f5f", "arrowhead": 0, "arrowwidth": 1}, "geo": {"bgcolor": "white", "landcolor": "#E5ECF6", "subunitcolor": "white", "showland": true, "showlakes": true, "lakecolor": "white"}, "title": {"x": 0.05}, "mapbox": {"style": "light"}}}, "title": {"text": "Soru Korelasyon Matrisi"}, "height": 450, "width": 500}), config);
+Plotly.newPlot('chart-timeline', [{"line": {"color": "#3498db", "width": 2}, "marker": {"size": 8}, "mode": "lines+markers", "x": ["2026-04-19"], "y": {"dtype": "f8", "bdata": "SZIkSZIkKUA="}, "type": "scatter"}], Object.assign({}, darkLayout, {"template": {"data": {"histogram2dcontour": [{"type": "histogram2dcontour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "choropleth": [{"type": "choropleth", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "histogram2d": [{"type": "histogram2d", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "heatmap": [{"type": "heatmap", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "contourcarpet": [{"type": "contourcarpet", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "contour": [{"type": "contour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "surface": [{"type": "surface", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "mesh3d": [{"type": "mesh3d", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "scatter": [{"fillpattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}, "type": "scatter"}], "parcoords": [{"type": "parcoords", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolargl": [{"type": "scatterpolargl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "bar": [{"error_x": {"color": "#2a3f5f"}, "error_y": {"color": "#2a3f5f"}, "marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "bar"}], "scattergeo": [{"type": "scattergeo", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolar": [{"type": "scatterpolar", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "histogram": [{"marker": {"pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "histogram"}], "scattergl": [{"type": "scattergl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatter3d": [{"type": "scatter3d", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermap": [{"type": "scattermap", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermapbox": [{"type": "scattermapbox", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterternary": [{"type": "scatterternary", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattercarpet": [{"type": "scattercarpet", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "carpet": [{"aaxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "baxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "type": "carpet"}], "table": [{"cells": {"fill": {"color": "#EBF0F8"}, "line": {"color": "white"}}, "header": {"fill": {"color": "#C8D4E3"}, "line": {"color": "white"}}, "type": "table"}], "barpolar": [{"marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "barpolar"}], "pie": [{"automargin": true, "type": "pie"}]}, "layout": {"autotypenumbers": "strict", "colorway": ["#636efa", "#EF553B", "#00cc96", "#ab63fa", "#FFA15A", "#19d3f3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52"], "font": {"color": "#2a3f5f"}, "hovermode": "closest", "hoverlabel": {"align": "left"}, "paper_bgcolor": "white", "plot_bgcolor": "#E5ECF6", "polar": {"bgcolor": "#E5ECF6", "angularaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "radialaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "ternary": {"bgcolor": "#E5ECF6", "aaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "baxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "caxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "coloraxis": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "colorscale": {"sequential": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "sequentialminus": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "diverging": [[0, "#8e0152"], [0.1, "#c51b7d"], [0.2, "#de77ae"], [0.3, "#f1b6da"], [0.4, "#fde0ef"], [0.5, "#f7f7f7"], [0.6, "#e6f5d0"], [0.7, "#b8e186"], [0.8, "#7fbc41"], [0.9, "#4d9221"], [1, "#276419"]]}, "xaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "yaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "scene": {"xaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "yaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "zaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}}, "shapedefaults": {"line": {"color": "#2a3f5f"}}, "annotationdefaults": {"arrowcolor": "#2a3f5f", "arrowhead": 0, "arrowwidth": 1}, "geo": {"bgcolor": "white", "landcolor": "#E5ECF6", "subunitcolor": "white", "showland": true, "showlakes": true, "lakecolor": "white"}, "title": {"x": 0.05}, "mapbox": {"style": "light"}}}, "title": {"text": "Zamana Gore Ortalama Depresyon Skoru"}, "xaxis": {"title": {"text": "Tarih"}}, "yaxis": {"title": {"text": "Ortalama PHQ-9 Skor"}}, "height": 350}), config);
+    </script>
+
+    <!-- Table Filter & Sort -->
+    <script>
+        function filterTable() {
+            var input = document.getElementById('tableFilter').value.toLowerCase();
+            var rows = document.querySelectorAll('#participantTable tbody tr');
+            rows.forEach(function(row) {
+                var text = row.textContent.toLowerCase();
+                row.style.display = text.includes(input) ? '' : 'none';
+            });
+        }
+
+        var sortDirection = {};
+        function sortTable(colIndex) {
+            var table = document.getElementById('participantTable');
+            var tbody = table.querySelector('tbody');
+            var rows = Array.from(tbody.querySelectorAll('tr'));
+            var dir = sortDirection[colIndex] = !sortDirection[colIndex];
+
+            rows.sort(function(a, b) {
+                var aText = a.cells[colIndex].textContent.trim();
+                var bText = b.cells[colIndex].textContent.trim();
+                var aNum = parseFloat(aText);
+                var bNum = parseFloat(bText);
+                if (!isNaN(aNum) && !isNaN(bNum)) {
+                    return dir ? aNum - bNum : bNum - aNum;
+                }
+                return dir ? aText.localeCompare(bText) : bText.localeCompare(aText);
+            });
+            rows.forEach(function(row) { tbody.appendChild(row); });
+        }
+    </script>
+</body>
+</html>

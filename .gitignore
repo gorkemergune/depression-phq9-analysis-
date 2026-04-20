@@ -4,13 +4,7 @@ config/credentials.json
 config/token.json
 token.json
 
-# Individual Reports (contains personal data)
-output/reports/bireysel/
-
-# Generated Outputs (reproducible via code)
-output/reports/genel_ozet_raporu.pdf
-output/reports/charts/
-output/dashboard/dashboard.html
+output/reports
 
 # Python
 __pycache__/

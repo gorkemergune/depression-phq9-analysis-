@@ -1,0 +1,75 @@
+{
+  "form_id": "1nb5l-JR0rjYxAOixmH4vU3qeB1p_RIpTQNQfZiKsOnU",
+  "form_url": "https://docs.google.com/forms/d/1nb5l-JR0rjYxAOixmH4vU3qeB1p_RIpTQNQfZiKsOnU/viewform",
+  "edit_url": "https://docs.google.com/forms/d/1nb5l-JR0rjYxAOixmH4vU3qeB1p_RIpTQNQfZiKsOnU/edit",
+  "question_mapping": {
+    "1909d5be": {
+      "column": "participant_name",
+      "title": "Adınız veya Takma Adınız"
+    },
+    "2a15faf2": {
+      "column": "gender",
+      "title": "Cinsiyetiniz"
+    },
+    "4d1e4276": {
+      "column": "q1",
+      "title": "Soru 1: Bir şeyler yapmaya karşı ilgi, heyecan veya motivasyon kaybı yaşama, bir anda vazgeçme"
+    },
+    "42adf535": {
+      "column": "q2",
+      "title": "Soru 2: Kendini çökmüş, karamsar veya umutsuz hissetme"
+    },
+    "1f247d51": {
+      "column": "q3",
+      "title": "Soru 3: Uykuya dalmada zorluk, gece sık sık uyanma veya aşırı uyuma"
+    },
+    "146b3a68": {
+      "column": "q4",
+      "title": "Soru 4: Sürekli yorgunluk, enerjisizlik veya tükenmişlik hissi"
+    },
+    "472df828": {
+      "column": "q5",
+      "title": "Soru 5: İştahsızlık, aşırı yeme veya duygusal açlıkla beslenme"
+    },
+    "75fb15fa": {
+      "column": "q6",
+      "title": "Soru 6: Kendini değersiz, başarısız veya yetersiz hissetme"
+    },
+    "7446aedb": {
+      "column": "q7",
+      "title": "Soru 7: Ders, iş veya günlük işlerde odaklanmada ciddi zorluk yaşama ve erteleme"
+    },
+    "0bfa51fe": {
+      "column": "age_range",
+      "title": "Soru 8: Sosyal medyada başkalarıyla kendini kıyaslayıp kötü hissetme"
+    },
+    "1a440778": {
+      "column": "q9",
+      "title": "Soru 9: Arkadaşlarla görüşmekten, dışarı çıkıp sosyalleşmekten veya aileyle vakit geçirmekten kaçınma"
+    },
+    "29c417e8": {
+      "column": "q10",
+      "title": "Soru 10: Gelecekle ilgili belirsizlik, kaygı veya 'ne olacak' korkusu yaşama"
+    },
+    "49264287": {
+      "column": "q11",
+      "title": "Soru 11: Kendini yalnız hissetme veya kimsenin seni anlamadığını düşünme"
+    },
+    "1a8be2e4": {
+      "column": "q12",
+      "title": "Soru 12: Açıklanamayan bas ağrıları, aniden mide bulantıları, nefes sıkışması gibi fiziksel belirtiler"
+    },
+    "55f465ef": {
+      "column": "q13",
+      "title": "Soru 13: Daha once zevk alınan hobilerden, aktivitelerden veya ilgi alanlarından soğuma veya uzaklaşma"
+    },
+    "1a7dfdd2": {
+      "column": "q14",
+      "title": "Soru 14: Keşke yaşamasam, hayat bitse de kurtulsam düşüncesi veya kendine zarar verme düşünceleri"
+    },
+    "53bbac88": {
+      "column": "q15",
+      "title": "Soru 15: Yaşadığın duyguları başkalarıyla paylaşamamak veya içine kapanma"
+    }
+  }
+}
