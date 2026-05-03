@@ -49,7 +49,7 @@ depression_analysis_project/
 ## Installation
 
 ```bash
-git clone https://github.com/GorkemParadise/depression-phq9-analysis-.git
+git clone https://github.com/gorkemergune/depression-phq9-analysis-.git
 cd depression-phq9-analysis-
 pip install -r requirements.txt
 ```
